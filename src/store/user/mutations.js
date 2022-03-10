@@ -16,8 +16,10 @@ export const setWebUrl = (state, data) => {
 
 export const setPressureReadings = (state, data) => {
   state.pressure_readings = data
+  LocalStorage.set('pressure_readings', state.pressure_readings)
 }
 
 export const setActivities = (state, data) => {
   state.activities = data
+  LocalStorage.set('activities', state.activities)
 }

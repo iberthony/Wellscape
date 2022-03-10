@@ -10,7 +10,7 @@ export const loginUser = async(context, payload) => {
     axios.post(url+'loginuser',payload)
     .then((response) => {
       if(response.data){
-        if(response.success){
+        if(response.data.success){
           context.commit('setUser',{...response.data.data,avatar:response.data.avatar})
         }
         resolve(response)

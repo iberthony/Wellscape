@@ -3,6 +3,7 @@
     <div class="col-12 row">
       <div class="col-6 q-px-xs">
         <q-btn
+          padding="15px 0"
           flat
           class="full-width"
           label="Well Activity"
@@ -12,6 +13,7 @@
       </div>
       <div class="col-6 q-px-xs">
         <q-btn
+          padding="15px 0"
           flat
           class="full-width"
           label="PSI Reading"
@@ -229,6 +231,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import { LocalStorage } from 'quasar'
 export default {
   name: 'Dashboard',
   data(){
@@ -240,7 +243,10 @@ export default {
     ...mapState('user', ['user','webAppUrl','pressure_readings','activities']),
   },
   created(){
-
+    const pressure_readings = LocalStorage.getItem('pressure_readings')
+    const activities = LocalStorage.getItem('activities')
+    if(pressure_readings) this.$store.commit('user/setPressureReadings',pressure_readings)
+    if(activities) this.$store.commit('user/setActivities',activities)
   },
   mounted(){
     // this.$store.dispatch('user/loadWells')

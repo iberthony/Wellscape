@@ -157,16 +157,16 @@ export default {
     }
   },
   created(){
+    const user = LocalStorage.getItem('user')
+    if(user){
+      this.$store.commit('user/setUser',user)
+      this.step = 2
+    }
     const webAppUrl = LocalStorage.getItem('webAppUrl')
     if(webAppUrl){
       this.$store.commit('user/setWebUrl',webAppUrl)
       this.$router.push('/dashboard')
       return
-    }
-    const user = LocalStorage.getItem('user')
-    if(user){
-      this.$store.commit('user/setUser',user)
-      this.step = 2
     }
   },
   mounted(){
