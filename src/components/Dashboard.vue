@@ -13,6 +13,7 @@
       </div>
       <div class="col-6 q-px-xs">
         <q-btn
+          @click="add_psi = true"
           padding="15px 0"
           flat
           class="full-width"
@@ -226,31 +227,285 @@
         </q-expansion-item>
       </q-list>
     </div>
+
+    <q-dialog
+      maximized
+      transition-show="slide-left"
+      transition-hide="slide-right"
+      v-model="add_psi">
+      <q-card class="add_psi">
+        <q-card-section class="row items-center q-py-none q-px-xs">
+          <div class="text-h6 full-width relative-position">
+            <q-btn
+              color="blue-6"
+              size="sm"
+              icon="arrow_back_ios_new"
+              flat
+              round
+              dense
+              v-close-popup />
+            <span
+              class="relative-position text-subtitle1 text-blue-6"
+              style="left:-5px;">
+              Back
+            </span>
+            <span
+              class="absolute-center text-body1 q-pt-xs text-bold">
+              New PSI Reading
+            </span>
+          </div>
+        </q-card-section>
+
+        <q-card-section class="q-px-xs" v-if="!selected_well">
+          <q-input
+            dense
+            borderless
+            v-model="search_well"
+            placeholder="Search"
+            class="shadow-4 q-px-xs rounded-borders">
+            <template v-slot:prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+          <template v-if="wells.length && search_well.length">
+            <q-list>
+              <q-item
+                clickable
+                v-ripple
+                v-for="(item,index) in wells.filter(x => x.post_title.includes(search_well))"
+                :key="'well-'+index"
+                @click="selected_well = item;search_well = ''">
+                <q-item-section>
+                  {{item.post_title}}
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="navigate_next"/>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </template>
+        </q-card-section>
+        <q-card-section class="q-px-xs" v-else>
+          <q-item class="q-px-none">
+            <q-item-section class="shadow-4">
+              <q-item-label class="text-center">
+                <span class="q-gutter-x-xs">
+                  <span>
+                    Selected Well: {{selected_well.post_title}}
+                  </span>
+                  <q-icon
+                    @click="selected_well = null;resetForm()"
+                    size="sm"
+                    color="grey-7"
+                    name="close" />
+                </span>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section class="q-px-none">
+              <q-form
+                ref="add_well"
+                class="row q-gutter-y-md"
+                @submit="submitPSI()">
+                <div class="col-12" @click="$refs.psi_date.$el.click()">
+                  <q-field
+                    outlined
+                    placeholder="Outlined"
+                    stack-label
+                    dense>
+                    <template v-slot:control @click="$refs.psi_date.$el.click()">
+                      <div class="self-center full-width no-outline" tabindex="0" @click="$refs.psi_date.$el.click()">
+                        {{current_date}}
+                        <q-icon ref="psi_date" name="calendar_month" class="cursor-pointer float-right">
+                          <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
+                            <q-date v-model="form.idate">
+                              <div class="row items-center justify-end">
+                                <q-btn v-close-popup label="Close" color="primary" flat />
+                              </div>
+                            </q-date>
+                          </q-popup-proxy>
+                        </q-icon>
+                      </div>
+                    </template>
+                  </q-field>
+                </div>
+                <div class="col-12 row q-gutter-x-xs">
+                  <div class="col">
+                    <q-input
+                      dense
+                      outlined
+                      v-model="form.reading_a"
+                      type="number"
+                      step="0.01"
+                      placeholder="Reading A" />
+                  </div>
+                  <div class="col">
+                    <q-input
+                      dense
+                      outlined
+                      v-model="form.reading_b"
+                      type="number"
+                      step="0.01"
+                      placeholder="Reading B" />
+                  </div>
+                  <div class="col">
+                    <q-input
+                      dense
+                      outlined
+                      v-model="form.reading_c"
+                      type="number"
+                      step="0.01"
+                      placeholder="Reading C" />
+                  </div>
+                </div>
+                <div class="col-12">
+                  <q-input
+                    v-model="form.comment"
+                    placeholder="Comments"
+                    outlined
+                    autogrow
+                    :input-style="{'min-height':'100px'}"/>
+                </div>
+                <div class="col-12">
+                  <q-field
+                    outlined
+                    placeholder="Outlined"
+                    stack-label
+                    dense>
+                    <template v-slot:control>
+                      <div class="self-center full-width no-outline" tabindex="0" @click="$refs.psi_file.pickFiles()">
+                        {{form.file.name ? form.file.name : 'Choose file'}}
+                        <q-icon
+                          class="float-right"
+                          @click.stop="$refs.psi_file.pickFiles()"
+                          name="fa fa-folder-open" />
+                      </div>
+                    </template>
+                  </q-field>
+                  <q-uploader
+                    :auto-upload="false"
+                    type="file"
+                    @added="addFile"
+                    v-show="false"
+                    ref="psi_file" />
+                </div>
+                <div class="col-12">
+                  <q-btn
+                    flat
+                    type="submit"
+                    padding="5px 0"
+                    class="full-width"
+                    label="Upload"
+                    text-color="white"
+                    style="border-radius:10px;background:#7ab929" />
+                </div>
+              </q-form>
+            </q-item-section>
+          </q-item>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import { LocalStorage } from 'quasar'
+import { date } from 'quasar'
 export default {
   name: 'Dashboard',
   data(){
     return{
-
+      add_psi: false,
+      search_well: '',
+      selected_well: null,
+      form: {
+        post_id: null,
+        user_id: null,
+        idate: null,
+        reading_a: null,
+        reading_b: null,
+        reading_c: null,
+        comment: null,
+        file: {
+          name: null
+        },
+      }
     }
   },
   computed:{
-    ...mapState('user', ['user','webAppUrl','pressure_readings','activities']),
+    ...mapState('user', ['user','webAppUrl','pressure_readings','activities','wells']),
+    months(){
+      return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    },
+    current_date(){
+      let idate = new Date()
+      if(this.form.idate){
+        idate = new Date(this.form.idate)
+      }
+      return idate.getDate()+' '+this.months[idate.getMonth()]+' '+idate.getFullYear()
+    }
+  },
+  watch:{
+    form:{
+      deep: true,
+      handler(val){
+        console.log(val.idate)
+      }
+    }
   },
   created(){
     const pressure_readings = LocalStorage.getItem('pressure_readings')
     const activities = LocalStorage.getItem('activities')
     if(pressure_readings) this.$store.commit('user/setPressureReadings',pressure_readings)
     if(activities) this.$store.commit('user/setActivities',activities)
+    this.resetForm()
   },
   mounted(){
-    // this.$store.dispatch('user/loadWells')
+    this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
+  },
+  methods:{
+    resetForm(){
+      this.form = {
+        post_id: null,
+        user_id: null,
+        idate: null,
+        reading_a: null,
+        reading_b: null,
+        reading_c: null,
+        comment: null,
+        file: {
+          name: null
+        },
+      }
+      const idate = new Date()
+      this.form.idate = idate.getFullYear()+'/'+(idate.getMonth() < 10 ? '0'+idate.getMonth() : idate.getMonth() )+'/'+idate.getDate()
+    },
+    addFile(files){
+      this.form.file = files.length ? files[0] : this.form.file
+      this.$refs.psi_file.reset()
+    },
+    submitPSI(){
+      const obj = {
+        post_id: this.selected_well.ID,
+        user_id: this.user.user_id,
+        idate: this.current_date,
+        reading_a: this.form.reading_a,
+        reading_b: this.form.reading_b,
+        reading_c: this.form.reading_c,
+        comment: this.form.comment,
+        file: this.form.file,
+      }
+      this.$store.dispatch('user/submitPSI',obj)
+      .then((response) => {
+        this.$store.dispatch('user/dashboardLoad')
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+    }
   }
 }
 </script>
@@ -261,6 +516,11 @@ export default {
       min-width: auto !important;
       padding-right: 5px !important;
     }
+  }
+}
+.add_psi{
+  .q-field__control {
+    border-radius: 10px !important;
   }
 }
 </style>

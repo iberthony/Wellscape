@@ -14,6 +14,11 @@ export const setWebUrl = (state, data) => {
   LocalStorage.set('webAppUrl', state.webAppUrl)
 }
 
+export const setWells = (state, data) => {
+  state.wells = data
+  LocalStorage.set('wells', state.wells)
+}
+
 export const setPressureReadings = (state, data) => {
   state.pressure_readings = data
   LocalStorage.set('pressure_readings', state.pressure_readings)

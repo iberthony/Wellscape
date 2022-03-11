@@ -39,7 +39,7 @@
           />
         </div>
         <q-form
-          v-show="step == 1"
+          v-show="step == 2"
           ref="login_form"
           class="q-gutter-y-sm"
           @submit="login(form)"
@@ -63,20 +63,37 @@
             lazy-rules
           />
           <p class="q-mt-none" :style="$style.errorMessage" v-if="error1">{{error1}}</p>
-          <q-btn 
-            :disable="form.username.length == 0 || form.password.length == 0"
-            :loading="is_loading"
-            size="md"
-            padding="md"
-            style="border-radius:10px"
-            class="full-width"
-            color="dark"
-            type="submit"
-            label="Next"
-          />
+          <div class="row justify-around q-gutter-x-sm">
+            <div class="col">
+              <q-btn 
+                :disable="is_loading2"
+                size="md"
+                padding="md"
+                style="border-radius:10px"
+                class="full-width"
+                color="dark"
+                @click="step = 1"
+                label="Back"
+              />
+            </div>
+            <div class="col">
+              <q-btn 
+                :disable="form.username.length == 0 || form.password.length == 0"
+                :loading="is_loading"
+                size="md"
+                padding="md"
+                style="border-radius:10px"
+                class="full-width"
+                color="dark"
+                type="submit"
+                label="Next"
+              />
+            </div>
+          </div>
+          
         </q-form>
         <q-form
-          v-show="step == 2"
+          v-show="step == 1"
           ref="login_form"
           class="q-gutter-y-sm"
           @submit="verifyCompany(form2)"
@@ -100,33 +117,17 @@
             lazy-rules
           />
           <p class="q-mt-none text-red text-capitalize" v-if="error2">{{error2}}</p>
-          <div class="row justify-around q-gutter-x-sm">
-            <div class="col">
-              <q-btn 
-                :disable="is_loading2"
-                size="md"
-                padding="md"
-                style="border-radius:10px"
-                class="full-width"
-                color="dark"
-                @click="step = 1"
-                label="Back"
-              />
-            </div>
-            <div class="col">
-              <q-btn 
-                :disable="form2.company.length == 0 || form2.companyCode.length == 0"
-                :loading="is_loading2"
-                size="md"
-                padding="md"
-                style="border-radius:10px"
-                class="full-width"
-                color="dark"
-                type="submit"
-                label="Next"
-              />
-            </div>
-          </div>
+          <q-btn 
+            :disable="form2.company.length == 0 || form2.companyCode.length == 0"
+            :loading="is_loading2"
+            size="md"
+            padding="md"
+            style="border-radius:10px"
+            class="full-width"
+            color="dark"
+            type="submit"
+            label="Next"
+          />
         </q-form>
       </q-card-section>
     </q-card>
@@ -157,16 +158,16 @@ export default {
     }
   },
   created(){
-    const user = LocalStorage.getItem('user')
-    if(user){
-      this.$store.commit('user/setUser',user)
-      this.step = 2
-    }
     const webAppUrl = LocalStorage.getItem('webAppUrl')
     if(webAppUrl){
       this.$store.commit('user/setWebUrl',webAppUrl)
+      this.step = 2
+    }
+    const user = LocalStorage.getItem('user')
+    console.log(user)
+    if(user && this.step == 2){
+      this.$store.commit('user/setUser',user)
       this.$router.push('/dashboard')
-      return
     }
   },
   mounted(){
@@ -182,7 +183,7 @@ export default {
         if(response.data.error){
           this.error1 = response.data.error
         }else{
-          this.step = 2
+          this.$router.push('/dashboard')
         }
         console.log(response.data)
       })
@@ -201,7 +202,7 @@ export default {
         if(response.data.error){
           this.error2 = response.data.error
         }else{
-          this.$router.push('/dashboard')
+          this.step = 2
         }
       })
       .catch((error) => {

@@ -7,7 +7,8 @@ import axios from 'axios'
 
 export const loginUser = async(context, payload) => {
   return new Promise(function(resolve, reject){
-    axios.post(url+'loginuser',payload)
+    if(!context.state.webAppUrl) return
+    axios.post(context.state.webAppUrl+'loginuser',payload)
     .then((response) => {
       if(response.data){
         if(response.data.success){
@@ -41,7 +42,7 @@ export const loadWells = async(context, payload) => {
     if(!context.state.webAppUrl) return
     axios.post(context.state.webAppUrl+'wells',payload)
     .then((response) => {
-      console.log(response.data)
+      if(response.data.wells) context.commit('setWells',response.data.wells)
       resolve(response)
     }).catch(error =>{
       reject(error)
@@ -56,6 +57,23 @@ export const dashboardLoad = async(context, payload) => {
     .then((response) => {
       if(response.data.pressure_readings) context.commit('setPressureReadings',response.data.pressure_readings)
       if(response.data.activities) context.commit('setActivities',response.data.activities)
+      resolve(response)
+    }).catch(error =>{
+      reject(error)
+    });
+  });
+}
+
+export const submitPSI = async(context, payload) => {
+  return new Promise(function(resolve, reject){
+    if(!context.state.webAppUrl) return
+    const formData = new FormData()
+    for(const key in payload){
+      formData.append(key, payload[key])
+    }
+    axios.post(context.state.webAppUrl+'addpsireading',formData)
+    .then((response) => {
+      console.log(response.data)
       resolve(response)
     }).catch(error =>{
       reject(error)

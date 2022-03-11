@@ -4,5 +4,6 @@ export default function () {
     webAppUrl: null,
     pressure_readings: [],
     activities: [],
+    wells: [],
   }
 }
