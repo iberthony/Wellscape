@@ -110,6 +110,17 @@ export default {
       leftDrawerOpen: false,
       essentialLinks: linksData
     }
+  },
+  created(){
+    const webAppUrl = LocalStorage.getItem('webAppUrl')
+    const user = LocalStorage.getItem('user')
+    if(webAppUrl){
+      this.$store.commit('user/setWebUrl',webAppUrl)
+    }
+    if(user && webAppUrl){
+      this.$store.commit('user/setUser',user)
+      this.$router.push('/dashboard')
+    }
   }
 }
 </script>

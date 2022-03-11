@@ -392,6 +392,7 @@
                 </div>
                 <div class="col-12">
                   <q-btn
+                    :loading="loading"
                     flat
                     type="submit"
                     padding="5px 0"
@@ -420,6 +421,7 @@ export default {
       add_psi: false,
       search_well: '',
       selected_well: null,
+      loading: false,
       form: {
         post_id: null,
         user_id: null,
@@ -431,7 +433,7 @@ export default {
         file: {
           name: null
         },
-      }
+      },
     }
   },
   computed:{
@@ -488,6 +490,8 @@ export default {
       this.$refs.psi_file.reset()
     },
     submitPSI(){
+      if(this.loading) return
+      this.loading = true
       const obj = {
         post_id: this.selected_well.ID,
         user_id: this.user.user_id,
@@ -500,7 +504,15 @@ export default {
       }
       this.$store.dispatch('user/submitPSI',obj)
       .then((response) => {
+        this.loading = false
         this.$store.dispatch('user/dashboardLoad')
+        this.$q.notify({
+          timeout: 2000,
+          color: 'green',
+          message: 'PSI reading uploaded',
+          icon: 'check_circle'
+        })
+        this.resetForm()
       })
       .catch((error) => {
         console.log(error)

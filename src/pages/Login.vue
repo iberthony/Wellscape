@@ -177,14 +177,15 @@ export default {
     login(form){
       if(this.is_loading) return
       this.is_loading = true
+      this.error1 = null
       this.$store.dispatch('user/loginUser',form)
       .then((response) => {
-        this.is_loading = false
         if(response.data.error){
           this.error1 = response.data.error
         }else{
           this.$router.push('/dashboard')
         }
+        this.is_loading = false
         console.log(response.data)
       })
       .catch((error) => {
@@ -195,7 +196,7 @@ export default {
     verifyCompany(form){
       if(this.is_loading2) return
       this.is_loading2 = true
-      console.log(form)
+      this.error2 = null
       this.$store.dispatch('user/verifyCompany',form)
       .then((response) => {
         this.is_loading2 = false
