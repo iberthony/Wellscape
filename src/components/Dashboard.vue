@@ -243,12 +243,12 @@
               flat
               round
               dense
-              v-close-popup />
-            <span
-              class="relative-position text-subtitle1 text-blue-6"
-              style="left:-5px;">
-              Back
-            </span>
+              @click="add_psi=false;resetForm()">
+              <span
+                class="relative-position text-subtitle1 text-blue-6">
+                Back
+              </span>
+            </q-btn>
             <span
               class="absolute-center text-body1 q-pt-xs text-bold">
               New PSI Reading
@@ -482,6 +482,7 @@ export default {
           name: null
         },
       }
+      this.selected_well = null
       const idate = new Date()
       this.form.idate = idate.getFullYear()+'/'+(idate.getMonth() < 10 ? '0'+idate.getMonth() : idate.getMonth() )+'/'+idate.getDate()
     },
@@ -504,6 +505,18 @@ export default {
       }
       this.$store.dispatch('user/submitPSI',obj)
       .then((response) => {
+        // const obj2 = {
+        //   post_id: this.selected_well.ID,
+        //   author_name: 'System',
+        //   dated: this.current_date,
+        //   reading_a: this.form.reading_a,
+        //   reading_b: this.form.reading_b,
+        //   reading_c: this.form.reading_c,
+        //   comment: this.form.comment,
+        //   file_name: '',
+        //   timestamp: response.data.dated,
+        //   download_href: '',
+        // }
         this.loading = false
         this.$store.dispatch('user/dashboardLoad')
         this.$q.notify({

@@ -56,7 +56,7 @@
 
 <script>
 import EssentialLink from 'components/EssentialLink.vue'
-
+import { LocalStorage } from 'quasar'
 const linksData = [
   {
     title: 'Docs',
