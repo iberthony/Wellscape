@@ -5,5 +5,6 @@ export default function () {
     pressure_readings: [],
     activities: [],
     wells: [],
+    is_online: true,
   }
 }

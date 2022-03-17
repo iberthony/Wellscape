@@ -413,7 +413,6 @@
 <script>
 import { mapState } from 'vuex'
 import { LocalStorage } from 'quasar'
-import { date } from 'quasar'
 export default {
   name: 'Dashboard',
   data(){
@@ -434,10 +433,11 @@ export default {
           name: null
         },
       },
+      to_add_psi: [],
     }
   },
   computed:{
-    ...mapState('user', ['user','webAppUrl','pressure_readings','activities','wells']),
+    ...mapState('user', ['user','webAppUrl','pressure_readings','activities','wells','is_online']),
     months(){
       return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     },
@@ -453,7 +453,7 @@ export default {
     form:{
       deep: true,
       handler(val){
-        console.log(val.idate)
+
       }
     }
   },
@@ -467,8 +467,57 @@ export default {
   mounted(){
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
+    this.to_add_psi = LocalStorage.getItem('to_add_psi') ? LocalStorage.getItem('to_add_psi') : []
+    console.log(this.to_add_psi)
+    if(this.to_add_psi.length){
+      this.submitToAddPsi(this.to_add_psi[0])
+    }
   },
   methods:{
+    async submitToAddPsi(reading){
+      try{
+        const obj = {
+          post_id: reading.post_id,
+          user_id: reading.user_id,
+          idate: reading.idate,
+          reading_a: reading.reading_a,
+          reading_b: reading.reading_b,
+          reading_c: reading.reading_c,
+          comment: reading.comment,
+        }
+        obj.file = await this.parseFile(reading.file,reading.file_name)
+        await this.$store.dispatch('user/submitPSI',obj)
+        const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
+        if(index >= 0){
+          this.to_add_psi.splice(index,1)
+          LocalStorage.set('to_add_psi', this.to_add_psi)
+        }
+        if(this.to_add_psi.length){
+          this.submitToAddPsi(this.to_add_psi[0])
+        }else{
+          this.$store.dispatch('user/dashboardLoad')
+        }
+      }catch(error){
+        if(this.to_add_psi.length){
+          this.submitToAddPsi(this.to_add_psi[0])
+        }
+      }
+    },
+    parseFile(base64,file_name='file') {
+      var base64Parts = base64.split(",");
+      var fileFormat = base64Parts[0].split(";")[1];
+      var fileContent = base64Parts[1];
+      var file = new File([fileContent], file_name, {type: fileFormat})
+      return file
+    },
+    toBase64(file){
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+      })
+    },
     resetForm(){
       this.form = {
         post_id: null,
@@ -490,46 +539,61 @@ export default {
       this.form.file = files.length ? files[0] : this.form.file
       this.$refs.psi_file.reset()
     },
-    submitPSI(){
-      if(this.loading) return
-      this.loading = true
-      const obj = {
-        post_id: this.selected_well.ID,
-        user_id: this.user.user_id,
-        idate: this.current_date,
-        reading_a: this.form.reading_a,
-        reading_b: this.form.reading_b,
-        reading_c: this.form.reading_c,
-        comment: this.form.comment,
-        file: this.form.file,
-      }
-      this.$store.dispatch('user/submitPSI',obj)
-      .then((response) => {
+    async submitPSI(){
+      try{
+        if(this.loading) return
+        this.loading = true
+        const obj = {
+          post_id: this.selected_well.ID,
+          user_id: this.user.user_id,
+          idate: this.current_date,
+          reading_a: this.form.reading_a,
+          reading_b: this.form.reading_b,
+          reading_c: this.form.reading_c,
+          comment: this.form.comment,
+          file: this.form.file,
+        }
+        if(!this.is_online){
+          obj.file_name = this.form.file.name
+          obj.add_id = new Date().getTime()
+          obj.file = await this.toBase64(this.form.file)
+          this.to_add_psi.push(obj)
+          LocalStorage.set('to_add_psi', this.to_add_psi)
+          this.$q.notify({
+            timeout: 2000,
+            color: 'green',
+            message: 'PSI reading will be uploaded when you get back online',
+            icon: 'check_circle'
+          })
+        }else{
+          await this.$store.dispatch('user/submitPSI',obj)
+          this.$store.dispatch('user/dashboardLoad')
+          this.$q.notify({
+            timeout: 2000,
+            color: 'green',
+            message: 'PSI reading uploaded',
+            icon: 'check_circle'
+          })
+        }
+        
         // const obj2 = {
-        //   post_id: this.selected_well.ID,
-        //   author_name: 'System',
-        //   dated: this.current_date,
-        //   reading_a: this.form.reading_a,
-        //   reading_b: this.form.reading_b,
-        //   reading_c: this.form.reading_c,
-        //   comment: this.form.comment,
-        //   file_name: '',
-        //   timestamp: response.data.dated,
-        //   download_href: '',
-        // }
-        this.loading = false
-        this.$store.dispatch('user/dashboardLoad')
-        this.$q.notify({
-          timeout: 2000,
-          color: 'green',
-          message: 'PSI reading uploaded',
-          icon: 'check_circle'
-        })
-        this.resetForm()
-      })
-      .catch((error) => {
+          //   post_id: this.selected_well.ID,
+          //   author_name: 'System',
+          //   dated: this.current_date,
+          //   reading_a: this.form.reading_a,
+          //   reading_b: this.form.reading_b,
+          //   reading_c: this.form.reading_c,
+          //   comment: this.form.comment,
+          //   file_name: '',
+          //   timestamp: response.data.dated,
+          //   download_href: '',
+          // }
+          this.loading = false
+          this.resetForm()
+      }catch(error){
         console.log(error)
-      })
+        this.loading = false
+      }
     }
   }
 }

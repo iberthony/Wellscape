@@ -9,7 +9,10 @@
             style="width: 150px; height: 20px"
           >
         </q-toolbar-title>
-
+        <q-badge
+          rounded
+          :color="is_online ? 'green' : 'red'"
+          class="q-mr-md" />
         <q-btn
           size="md"
           flat
@@ -57,6 +60,7 @@
 <script>
 import EssentialLink from 'components/EssentialLink.vue'
 import { LocalStorage } from 'quasar'
+import { mapState } from 'vuex'
 const linksData = [
   {
     title: 'Docs',
@@ -110,6 +114,9 @@ export default {
       leftDrawerOpen: false,
       essentialLinks: linksData
     }
+  },
+  computed:{
+    ...mapState('user', ['is_online']),
   },
   created(){
     const webAppUrl = LocalStorage.getItem('webAppUrl')

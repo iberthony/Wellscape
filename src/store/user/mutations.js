@@ -28,3 +28,7 @@ export const setActivities = (state, data) => {
   state.activities = data
   LocalStorage.set('activities', state.activities)
 }
+
+export const setOnline = (state, data) => {
+  state.is_online = data
+}
