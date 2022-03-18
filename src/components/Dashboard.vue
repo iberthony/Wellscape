@@ -450,10 +450,13 @@ export default {
     }
   },
   watch:{
-    form:{
-      deep: true,
+    is_online:{
+      immediate: true,
       handler(val){
-
+        if(!val) return
+        if(this.to_add_psi.length){
+          this.submitToAddPsi(this.to_add_psi[0])
+        }
       }
     }
   },
@@ -469,9 +472,6 @@ export default {
     this.$store.dispatch('user/dashboardLoad')
     this.to_add_psi = LocalStorage.getItem('to_add_psi') ? LocalStorage.getItem('to_add_psi') : []
     console.log(this.to_add_psi)
-    if(this.to_add_psi.length){
-      this.submitToAddPsi(this.to_add_psi[0])
-    }
   },
   methods:{
     async submitToAddPsi(reading){
