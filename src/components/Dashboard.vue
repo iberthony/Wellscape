@@ -307,6 +307,7 @@
               <q-form
                 ref="add_well"
                 class="row q-gutter-y-md"
+                greedy
                 @submit="submitPSI()">
                 <div class="col-12" @click="$refs.psi_date.$el.click()">
                   <q-field
@@ -338,7 +339,10 @@
                       v-model="form.reading_a"
                       type="number"
                       step="0.01"
-                      placeholder="Reading A" />
+                      placeholder="Reading A"
+                      :rules="[val => !!val && val > 0 || 'Invalid reading']"
+                      lazy-rules 
+                      hide-bottom-space/>
                   </div>
                   <div class="col">
                     <q-input
@@ -347,7 +351,10 @@
                       v-model="form.reading_b"
                       type="number"
                       step="0.01"
-                      placeholder="Reading B" />
+                      placeholder="Reading B"
+                      :rules="[val => !!val && val > 0 || 'Invalid reading']"
+                      lazy-rules 
+                      hide-bottom-space/>
                   </div>
                   <div class="col">
                     <q-input
@@ -356,7 +363,10 @@
                       v-model="form.reading_c"
                       type="number"
                       step="0.01"
-                      placeholder="Reading C" />
+                      placeholder="Reading C"
+                      :rules="[val => !!val && val > 0 || 'Invalid reading']"
+                      lazy-rules 
+                      hide-bottom-space/>
                   </div>
                 </div>
                 <div class="col-12">
