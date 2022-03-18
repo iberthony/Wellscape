@@ -485,7 +485,7 @@ export default {
           reading_c: reading.reading_c,
           comment: reading.comment,
         }
-        obj.file = await this.parseFile(reading.file,reading.file_name)
+        obj.file = reading.file ? await this.parseFile(reading.file,reading.file_name) : null
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
         if(index >= 0){
@@ -554,9 +554,11 @@ export default {
           file: this.form.file,
         }
         if(!this.is_online){
-          obj.file_name = this.form.file.name
+          if(this.form.file){
+            obj.file = await this.toBase64(this.form.file);
+            obj.file_name = this.form.file.name
+          }
           obj.add_id = new Date().getTime()
-          obj.file = await this.toBase64(this.form.file)
           this.to_add_psi.push(obj)
           LocalStorage.set('to_add_psi', this.to_add_psi)
           this.$q.notify({
