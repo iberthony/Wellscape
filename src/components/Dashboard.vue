@@ -510,7 +510,7 @@ export default {
         }
       }catch(error){
         if(this.to_add_psi.length){
-          this.submitToAddPsi(this.to_add_psi[0])
+         // this.submitToAddPsi(this.to_add_psi[0])
         }
       }
     },
@@ -552,7 +552,8 @@ export default {
     },
     async addOffline(obj){
       if(!obj) return
-      if(this.form.file){
+     
+      if(this.form.file && this.form.file.name){
         obj.file = await this.toBase64(this.form.file);
         obj.file_name = this.form.file.name
       }

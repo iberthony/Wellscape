@@ -1,0 +1,7 @@
+{
+  "appId": "org.wellscape.app",
+  "appName": "Well-Scape",
+  "bundledWebRuntime": false,
+  "npmClient": "npm",
+  "webDir": "www"
+}

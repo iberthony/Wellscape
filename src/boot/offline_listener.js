@@ -1,19 +1,20 @@
+import axios from 'axios'
 export default async ({ router, store, Vue,redirect}) => {
-  async function onNetworkChange(){
-    // store.state.user.is_online = navigator.onLine
-    store.commit('user/setOnline',navigator.onLine)
+  async function onNetworkChange(event){
+    let status = event.type === 'online' ? true : false
+    store.commit('user/setOnline',status)
   }
-
-  if(Vue.prototype.$q.platform.is.cordova){
-    console.log(navigator)
-    // document.addEventListener("offline", onNetworkChange, false)
-    // document.addEventListener("online", onNetworkChange, false)
-    setInterval(function(){
-      onNetworkChange();
-    },3000)
-  }else{
-    onNetworkChange()
+  async function setStatus(status){
+    store.commit('user/setOnline',status)
+  }
+    setInterval(() => {
+      axios.get('https://random-data-api.com/api/cannabis/random_cannabis?size=1').then(() => {
+        setStatus(true)
+      }).catch((error) => {
+        setStatus(false)
+      })
+    }, 4000)
     window.addEventListener('offline', onNetworkChange, false)
     window.addEventListener('online', onNetworkChange, false)
-  }
+  
 }
