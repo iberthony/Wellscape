@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf" container class="main-container">
-    <q-header class="header" bordered v-if="$route.meta.auth" style="border-color:#efefef">
+    <q-header :class="$q.platform.is.ios ? 'header-ios' : 'header'" bordered v-if="$route.meta.auth" style="border-color:#efefef">
       <q-toolbar class="bg-white">
         <q-toolbar-title>
           <img
@@ -10,9 +10,9 @@
           >
         </q-toolbar-title>
         <q-badge
-          :key="userOnline ? '1' : '0'"
+          :key="is_online ? '1' : '0'"
           rounded
-          :color="userOnline ? 'green' : 'red'"
+          :color="is_online ? 'green' : 'red'"
           class="q-mr-md" />
         <q-btn
           size="md"
@@ -114,28 +114,14 @@ export default {
     return {
       leftDrawerOpen: false,
       essentialLinks: linksData,
-      userOnline:true
     }
   },
   computed:{
     ...mapState('user', ['is_online']),
   },
+  watch:{
+  },
   created(){
-
-  setInterval(() => {
-       try {
-      this.$axios.get('https://random-data-api.com/api/cannabis/random_cannabis?size=1').then(() => {
-        this.userOnline = true
-         this.$store.commit('user/setOnline',true)
-      }).catch((error) => {
-        this.userOnline = false
-            this.$store.commit('user/setOnline',false)
-      }) 
-       } catch (error){
-          this.userOnline = false
-            this.$store.commit('user/setOnline',false)
-       }
-    }, 3000)
     const webAppUrl = LocalStorage.getItem('webAppUrl')
     const user = LocalStorage.getItem('user')
     if(webAppUrl){
@@ -143,13 +129,22 @@ export default {
     }
     if(user && webAppUrl){
       this.$store.commit('user/setUser',user)
-      this.$router.push('/dashboard')
     }
-  }
+  },
 }
 </script>
+<style lang="scss">
+.header-ios{
+  padding-top: constant(safe-area-inset-top); // for iOS 11.0
+  padding-top: env(safe-area-inset-top); // for iOS 11.2 +
+}
 
-<style scoped>
+.footer-ios{
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+</style>
+<style scoped lang="scss">
 .main-container{
   height: 100vh;
   max-width: 400px;

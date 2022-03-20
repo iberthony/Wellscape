@@ -148,6 +148,7 @@
 
 <script>
 import { LocalStorage } from 'quasar'
+import { mapState } from 'vuex'
 export default {
   name: 'LoginPage',
   data (){
@@ -168,17 +169,30 @@ export default {
       error2: null,
     }
   },
+  computed:{
+    ...mapState('user', ['user','webAppUrl']),
+  },
   created(){
+    
+  },
+  mounted(){
     const webAppUrl = LocalStorage.getItem('webAppUrl')
-    if(webAppUrl){
+    if(webAppUrl || this.webAppUrl){
       this.$store.commit('user/setWebUrl',webAppUrl)
       this.step = 2
     }
     const user = LocalStorage.getItem('user')
-    console.log(user)
     if(user && this.step == 2){
       this.$store.commit('user/setUser',user)
-      this.$router.push('/dashboard')
+    }
+  },
+  watch:{
+    user:{
+      deep:true,
+      immediate:true,
+      handler(val){
+        if(val) this.$router.push('/dashboard')
+      }
     }
   },
   mounted(){
@@ -193,8 +207,6 @@ export default {
       .then((response) => {
         if(response.data.error){
           this.error1 = response.data.error
-        }else{
-          this.$router.push('/dashboard')
         }
         this.is_loading = false
         console.log(response.data)
