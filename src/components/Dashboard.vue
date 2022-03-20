@@ -463,6 +463,7 @@ export default {
     is_online:{
       immediate: true,
       handler(val){
+        console.log(val)
         if(!val) return
         if(this.to_add_psi.length){
           this.submitToAddPsi(this.to_add_psi[0])
@@ -549,6 +550,22 @@ export default {
       this.form.file = files.length ? files[0] : this.form.file
       this.$refs.psi_file.reset()
     },
+    async addOffline(obj){
+      if(!obj) return
+      if(this.form.file){
+        obj.file = await this.toBase64(this.form.file);
+        obj.file_name = this.form.file.name
+      }
+      obj.add_id = new Date().getTime()
+      this.to_add_psi.push(obj)
+      LocalStorage.set('to_add_psi', this.to_add_psi)
+      this.$q.notify({
+        timeout: 2000,
+        color: 'green',
+        message: 'PSI reading will be uploaded when you get back online',
+        icon: 'check_circle'
+      })
+    },
     async submitPSI(){
       try{
         if(this.loading) return
@@ -564,19 +581,7 @@ export default {
           file: this.form.file,
         }
         if(!this.is_online){
-          if(this.form.file){
-            obj.file = await this.toBase64(this.form.file);
-            obj.file_name = this.form.file.name
-          }
-          obj.add_id = new Date().getTime()
-          this.to_add_psi.push(obj)
-          LocalStorage.set('to_add_psi', this.to_add_psi)
-          this.$q.notify({
-            timeout: 2000,
-            color: 'green',
-            message: 'PSI reading will be uploaded when you get back online',
-            icon: 'check_circle'
-          })
+          this.addOffline(obj)
         }else{
           await this.$store.dispatch('user/submitPSI',obj)
           this.$store.dispatch('user/dashboardLoad')
@@ -604,6 +609,17 @@ export default {
           this.resetForm()
       }catch(error){
         console.log(error)
+        const obj = {
+          post_id: this.selected_well.ID,
+          user_id: this.user.user_id,
+          idate: this.current_date,
+          reading_a: this.form.reading_a,
+          reading_b: this.form.reading_b,
+          reading_c: this.form.reading_c,
+          comment: this.form.comment,
+          file: this.form.file,
+        }
+        this.addOffline(obj)
         this.loading = false
       }
     }

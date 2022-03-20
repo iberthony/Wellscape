@@ -30,5 +30,6 @@ export const setActivities = (state, data) => {
 }
 
 export const setOnline = (state, data) => {
+  console.log(data)
   state.is_online = data
 }
