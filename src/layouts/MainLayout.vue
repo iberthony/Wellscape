@@ -1,17 +1,18 @@
 <template>
   <q-layout view="lHh Lpr lFf" container class="main-container">
-    <q-header bordered v-if="$route.meta.auth" style="border-color:#efefef">
+    <q-header class="header" bordered v-if="$route.meta.auth" style="border-color:#efefef">
       <q-toolbar class="bg-white">
         <q-toolbar-title>
           <img
             alt="Quasar logo"
             src="~assets/logo.png"
-            style="width: 150px; height: 20px"
+            style="height: 25px"
           >
         </q-toolbar-title>
         <q-badge
+          :key="userOnline ? '1' : '0'"
           rounded
-          :color="is_online ? 'green' : 'red'"
+          :color="userOnline ? 'green' : 'red'"
           class="q-mr-md" />
         <q-btn
           size="md"
@@ -112,13 +113,29 @@ export default {
   data () {
     return {
       leftDrawerOpen: false,
-      essentialLinks: linksData
+      essentialLinks: linksData,
+      userOnline:true
     }
   },
   computed:{
     ...mapState('user', ['is_online']),
   },
   created(){
+
+  setInterval(() => {
+       try {
+      this.$axios.get('https://random-data-api.com/api/cannabis/random_cannabis?size=1').then(() => {
+        this.userOnline = true
+         this.$store.commit('user/setOnline',true)
+      }).catch((error) => {
+        this.userOnline = false
+            this.$store.commit('user/setOnline',false)
+      }) 
+       } catch (error){
+          this.userOnline = false
+            this.$store.commit('user/setOnline',false)
+       }
+    }, 3000)
     const webAppUrl = LocalStorage.getItem('webAppUrl')
     const user = LocalStorage.getItem('user')
     if(webAppUrl){
@@ -137,5 +154,8 @@ export default {
   height: 100vh;
   max-width: 400px;
   margin: 0 auto;
+}
+.header {
+padding-top: env(safe-area-inset-top);
 }
 </style>

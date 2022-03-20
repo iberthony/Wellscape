@@ -267,12 +267,12 @@
               <q-icon name="search" />
             </template>
           </q-input>
-          <template v-if="wells.length && search_well.length">
+          <template v-if="getWells().length && search_well.length">
             <q-list>
               <q-item
                 clickable
                 v-ripple
-                v-for="(item,index) in wells.filter(x => x.post_title.includes(search_well))"
+                v-for="(item,index) in getWells().filter(x => x.post_title.includes(search_well))"
                 :key="'well-'+index"
                 @click="selected_well = item;search_well = ''">
                 <q-item-section>
@@ -307,29 +307,12 @@
               <q-form
                 ref="add_well"
                 class="row q-gutter-y-md"
-                greedy
+                
                 @submit="submitPSI()">
-                <div class="col-12" @click="$refs.psi_date.$el.click()">
-                  <q-field
-                    outlined
-                    placeholder="Outlined"
-                    stack-label
-                    dense>
-                    <template v-slot:control @click="$refs.psi_date.$el.click()">
-                      <div class="self-center full-width no-outline" tabindex="0" @click="$refs.psi_date.$el.click()">
-                        {{current_date}}
-                        <q-icon ref="psi_date" name="calendar_month" class="cursor-pointer float-right">
-                          <q-popup-proxy ref="qDateProxy" transition-show="scale" transition-hide="scale">
-                            <q-date v-model="form.idate">
-                              <div class="row items-center justify-end">
-                                <q-btn v-close-popup label="Close" color="primary" flat />
-                              </div>
-                            </q-date>
-                          </q-popup-proxy>
-                        </q-icon>
-                      </div>
-                    </template>
-                  </q-field>
+                <div class="col-12" >
+                    <q-input outlined type="date" v-model="form.idate">
+                      
+                            </q-input>
                 </div>
                 <div class="col-12 row q-gutter-x-xs">
                   <div class="col">
@@ -378,27 +361,15 @@
                     :input-style="{'min-height':'100px'}"/>
                 </div>
                 <div class="col-12">
-                  <q-field
-                    outlined
-                    placeholder="Outlined"
-                    stack-label
-                    dense>
-                    <template v-slot:control>
-                      <div class="self-center full-width no-outline" tabindex="0" @click="$refs.psi_file.pickFiles()">
-                        {{form.file.name ? form.file.name : 'Choose file'}}
-                        <q-icon
-                          class="float-right"
-                          @click.stop="$refs.psi_file.pickFiles()"
-                          name="fa fa-folder-open" />
-                      </div>
-                    </template>
-                  </q-field>
-                  <q-uploader
-                    :auto-upload="false"
-                    type="file"
-                    @added="addFile"
-                    v-show="false"
-                    ref="psi_file" />
+         
+
+                     <q-file disable   v-model="form.file" dense  ref="psi_file" rounded outlined bottom-slots  accept="image/*"  label="Choose file" counter max-files="12">
+      
+
+        <template v-slot:append>
+            <q-icon   name="fa fa-folder-open" />
+        </template>
+                     </q-file>
                 </div>
                 <div class="col-12">
                   <q-btn
@@ -427,6 +398,7 @@ export default {
   name: 'Dashboard',
   data(){
     return{
+      addedFile:null,
       add_psi: false,
       search_well: '',
       selected_well: null,
@@ -439,9 +411,7 @@ export default {
         reading_b: null,
         reading_c: null,
         comment: null,
-        file: {
-          name: null
-        },
+        file: null,
       },
       to_add_psi: [],
     }
@@ -456,14 +426,14 @@ export default {
       if(this.form.idate){
         idate = new Date(this.form.idate)
       }
-      return idate.getDate()+' '+this.months[idate.getMonth()]+' '+idate.getFullYear()
+      return idate.getDate()+' '+this.months[idate.getMonth()+1]+' '+idate.getFullYear()
     }
   },
   watch:{
     is_online:{
       immediate: true,
       handler(val){
-        console.log(val)
+       
         if(!val) return
         if(this.to_add_psi.length){
           this.submitToAddPsi(this.to_add_psi[0])
@@ -479,12 +449,17 @@ export default {
     this.resetForm()
   },
   mounted(){
+ 
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
-    this.to_add_psi = LocalStorage.getItem('to_add_psi') ? LocalStorage.getItem('to_add_psi') : []
-    console.log(this.to_add_psi)
+
+ 
   },
   methods:{
+    getWells(){
+      const wells = LocalStorage.getItem('wells')
+      return this.wells.length ?  this.wells : wells
+    },
     async submitToAddPsi(reading){
       try{
         const obj = {
@@ -496,7 +471,7 @@ export default {
           reading_c: reading.reading_c,
           comment: reading.comment,
         }
-        obj.file = reading.file ? await this.parseFile(reading.file,reading.file_name) : null
+        obj.file = reading.file //  ? await this.parseFile(reading.file, 'File') : null
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
         if(index >= 0){
@@ -510,16 +485,19 @@ export default {
         }
       }catch(error){
         if(this.to_add_psi.length){
-         // this.submitToAddPsi(this.to_add_psi[0])
+        //  this.submitToAddPsi(this.to_add_psi[0])
         }
       }
     },
-    parseFile(base64,file_name='file') {
-      var base64Parts = base64.split(",");
-      var fileFormat = base64Parts[0].split(";")[1];
-      var fileContent = base64Parts[1];
-      var file = new File([fileContent], file_name, {type: fileFormat})
-      return file
+    parseFile(dataURI) {
+    
+    var byteString = atob(dataURI.split(',')[1]);
+    var ab = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(ab);
+    for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/png' });
     },
     toBase64(file){
       return new Promise((resolve, reject) => {
@@ -544,11 +522,11 @@ export default {
       }
       this.selected_well = null
       const idate = new Date()
-      this.form.idate = idate.getFullYear()+'/'+(idate.getMonth() < 10 ? '0'+idate.getMonth() : idate.getMonth() )+'/'+idate.getDate()
+      this.form.idate = idate.getFullYear()+'-'+(idate.getMonth() < 10 ? '0'+(idate.getMonth()+1) : (idate.getMonth()+1) )+'-'+idate.getDate()
     },
     addFile(files){
-      this.form.file = files.length ? files[0] : this.form.file
-      this.$refs.psi_file.reset()
+     // this.form.file =  this.form.file
+    // this.$refs.psi_file.reset()
     },
     async addOffline(obj){
       if(!obj) return

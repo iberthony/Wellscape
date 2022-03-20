@@ -5,7 +5,7 @@
         <img
           alt="Quasar logo"
           src="~assets/logo.png"
-          style="width: 200px; height: 35px"
+          style=" height: 35px"
         >
       </q-card-section>
       <q-card-section class="q-py-none">
@@ -46,6 +46,7 @@
           greedy>
           <q-input
             ref="username"
+            autocomplete="username"
             outlined
             v-model="form.username"
             label="Username"
@@ -55,13 +56,22 @@
           />
           <q-input
             ref="password"
-            type="password"
+            :type="isPwd ? 'password' : 'text'" 
             outlined
+            autocomplete="current-password"
             v-model="form.password"
             label="Password"
             :rules="[val => !!val || 'Password is required']"
             lazy-rules
+          >
+          <template v-slot:append>
+          <q-icon
+            :name="isPwd ? 'visibility_off' : 'visibility'"
+            class="cursor-pointer"
+            @click="isPwd = !isPwd"
           />
+        </template>
+          </q-input>
           <p class="q-mt-none" :style="$style.errorMessage" v-if="error1">{{error1}}</p>
           <div class="row justify-around q-gutter-x-sm">
             <div class="col">
@@ -142,6 +152,7 @@ export default {
   name: 'LoginPage',
   data (){
     return {
+      isPwd: true,
       form: {
         username: '',
         password: '',
