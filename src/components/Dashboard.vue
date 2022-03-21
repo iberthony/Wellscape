@@ -452,7 +452,21 @@ export default {
  
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
-
+    const onOnline = () => {
+      console.log( 'onOnline')
+       this.$store.commit('user/setOnline',true)
+    }
+    const onOffline = () => {
+        console.log( 'onOffline')
+       this.$store.commit('user/setOnline',false)
+    }
+     const onDeviceReady  = ()  => {
+         console.log( 'onOffonDeviceReadyline')
+	    document.addEventListener("offline", onOffline, false);
+      document.addEventListener("online", onOnline, false);
+    }
+    
+    document.addEventListener("deviceready", onDeviceReady, false);
  
   },
   methods:{
@@ -559,9 +573,7 @@ export default {
           comment: this.form.comment,
           file: this.form.file,
         }
-        if(!this.is_online){
-          this.addOffline(obj)
-        }else{
+      
           await this.$store.dispatch('user/submitPSI',obj)
           this.$store.dispatch('user/dashboardLoad')
           this.$q.notify({
@@ -570,7 +582,7 @@ export default {
             message: 'PSI reading uploaded',
             icon: 'check_circle'
           })
-        }
+        
         
         // const obj2 = {
           //   post_id: this.selected_well.ID,

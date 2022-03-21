@@ -10,9 +10,9 @@
           >
         </q-toolbar-title>
         <q-badge
-          :key="userOnline ? '1' : '0'"
+          :key="is_online ? '1' : '0'"
           rounded
-          :color="userOnline ? 'green' : 'red'"
+          :color="is_online ? 'green' : 'red'"
           class="q-mr-md" />
         <q-btn
           size="md"
@@ -121,21 +121,27 @@ export default {
     ...mapState('user', ['is_online']),
   },
   created(){
-
+    /*
+  const getTime = () =>  Date.now()
   setInterval(() => {
+  
        try {
-      this.$axios.get('https://random-data-api.com/api/cannabis/random_cannabis?size=1').then(() => {
+      this.$axios.get('https://random-data-api.com/api/cannabis/random_cannabis?size=1&time='+getTime()).then((res) => {
+         console.log(res, 'test 0')
         this.userOnline = true
          this.$store.commit('user/setOnline',true)
       }).catch((error) => {
+            console.log(error, 'test 1')
         this.userOnline = false
             this.$store.commit('user/setOnline',false)
       }) 
        } catch (error){
+              console.log(error, 'test 2')
           this.userOnline = false
             this.$store.commit('user/setOnline',false)
        }
     }, 3000)
+    */
     const webAppUrl = LocalStorage.getItem('webAppUrl')
     const user = LocalStorage.getItem('user')
     if(webAppUrl){
