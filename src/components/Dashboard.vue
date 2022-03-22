@@ -267,12 +267,12 @@
               <q-icon name="search" />
             </template>
           </q-input>
-          <template v-if="getWells().length && search_well.length">
+          <template v-if="wells.length && search_well.length">
             <q-list>
               <q-item
                 clickable
                 v-ripple
-                v-for="(item,index) in getWells().filter(x => x.post_title.includes(search_well))"
+                v-for="(item,index) in wells.filter(x => x.post_title.includes(search_well))"
                 :key="'well-'+index"
                 @click="selected_well = item;search_well = ''">
                 <q-item-section>
@@ -310,9 +310,7 @@
                 
                 @submit="submitPSI()">
                 <div class="col-12" >
-                    <q-input outlined type="date" v-model="form.idate">
-                      
-                            </q-input>
+                  <q-input outlined type="date" v-model="form.idate"/>
                 </div>
                 <div class="col-12 row q-gutter-x-xs">
                   <div class="col">
@@ -361,15 +359,44 @@
                     :input-style="{'min-height':'100px'}"/>
                 </div>
                 <div class="col-12">
-         
-
-                     <q-file disable   v-model="form.file" dense  ref="psi_file" rounded outlined bottom-slots  accept="image/*"  label="Choose file" counter max-files="12">
-      
-
-        <template v-slot:append>
-            <q-icon   name="fa fa-folder-open" />
-        </template>
-                     </q-file>
+                  <q-field
+                    outlined
+                    placeholder="Outlined"
+                    stack-label
+                    dense>
+                    <template v-slot:control>
+                      <div class="self-center full-width no-outline" tabindex="0" @click="openCamera()">
+                        {{form.file ? form.file.name : 'Choose file'}}
+                      </div>
+                    </template>
+                    <template v-slot:append>
+                      <div class="q-gutter-x-sm">
+                        <q-icon
+                          name="fa fa-folder-open"
+                          @click="openCamera()" />
+                        <q-icon
+                          v-if="form.file && false"
+                          name="cancel"
+                          @click="form.file = null" />
+                      </div>
+                    </template>
+                  </q-field>
+                  <q-file
+                    disable
+                    v-if="false"
+                    v-model="files"
+                    dense
+                    ref="psi_file"
+                    :multiple="false"
+                    rounded
+                    outlined
+                    bottom-slots
+                    accept="image/*"
+                    label="Choose file">
+                    <template v-slot:append>
+                      <q-icon name="fa fa-folder-open"/>
+                    </template>
+                  </q-file>
                 </div>
                 <div class="col-12">
                   <q-btn
@@ -418,6 +445,10 @@ export default {
   },
   computed:{
     ...mapState('user', ['user','webAppUrl','pressure_readings','activities','wells','is_online']),
+    ...mapState('settings', ['cameraOptions']),
+    files(){
+      return this.form.file ? [this.form.file] : []
+    },
     months(){
       return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     },
@@ -433,23 +464,30 @@ export default {
     is_online:{
       immediate: true,
       handler(val){
-       
         if(!val) return
+       this.to_add_psi = LocalStorage.getItem('to_add_psi') || []
         if(this.to_add_psi.length){
           this.submitToAddPsi(this.to_add_psi[0])
         }
+      }
+    },
+    selected_well:{
+      deep: true,
+      handler(val){
+        if(val) {this.form.post_id = val.ID;this.form.user_id = this.user.user_id}
       }
     }
   },
   created(){
     const pressure_readings = LocalStorage.getItem('pressure_readings')
     const activities = LocalStorage.getItem('activities')
+    const wells = LocalStorage.getItem('wells')
     if(pressure_readings) this.$store.commit('user/setPressureReadings',pressure_readings)
     if(activities) this.$store.commit('user/setActivities',activities)
+    if(wells) this.$store.commit('user/setWells',wells)
     this.resetForm()
   },
   mounted(){
- 
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
     const onOnline = () => {
@@ -470,9 +508,38 @@ export default {
  
   },
   methods:{
-    getWells(){
-      const wells = LocalStorage.getItem('wells')
-      return this.wells.length ?  this.wells : wells
+    async openCamera(){
+      navigator.camera.getPicture(this.cameraSuccess, this.cameraError,this.cameraOptions)
+    },
+
+    createFileUrl(val){
+      return new Promise((resolve, reject) => {
+        window.resolveLocalFileSystemURL(val, function success(fileEntry) {
+
+           fileEntry.file(function (file) {
+            resolve(file)
+        });
+         
+          navigator.camera.cleanup()
+        }, function () {
+          // If don't get the FileEntry (which may happen when testing
+          // on some emulators), copy to a new FileEntry.
+          createNewFileEntry(imgUri);
+        });
+      })
+      
+    },
+
+    cameraSuccess(val){
+      this.createFileUrl(val)
+      .then((response) => {
+       console.log(response, 'response')
+        this.form.file = response
+      })
+    },
+
+    cameraError(val){
+      console.log(val)
     },
     async submitToAddPsi(reading){
       try{
@@ -485,7 +552,10 @@ export default {
           reading_c: reading.reading_c,
           comment: reading.comment,
         }
-        obj.file = reading.file //  ? await this.parseFile(reading.file, 'File') : null
+        // obj.file = reading.file //  ? await this.parseFile(reading.file, 'File') : null
+        if(reading.file){
+        obj.file = await this.createFileUrl(reading.file)
+        }
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
         if(index >= 0){
@@ -503,16 +573,17 @@ export default {
         }
       }
     },
+
     parseFile(dataURI) {
-    
-    var byteString = atob(dataURI.split(',')[1]);
-    var ab = new ArrayBuffer(byteString.length);
-    var ia = new Uint8Array(ab);
-    for (var i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-    }
-    return new Blob([ab], { type: 'image/png' });
+      var byopenCameraring = atob(dataURI.split(',')[1]);
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+      }
+        return new Blob([ab], { type: 'image/png' });
     },
+
     toBase64(file){
       return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -521,6 +592,7 @@ export default {
           reader.onerror = error => reject(error);
       })
     },
+    
     resetForm(){
       this.form = {
         post_id: null,
@@ -530,28 +602,30 @@ export default {
         reading_b: null,
         reading_c: null,
         comment: null,
-        file: {
-          name: null
-        },
+        file: null,
       }
       this.selected_well = null
       const idate = new Date()
       this.form.idate = idate.getFullYear()+'-'+(idate.getMonth() < 10 ? '0'+(idate.getMonth()+1) : (idate.getMonth()+1) )+'-'+idate.getDate()
     },
-    addFile(files){
-     // this.form.file =  this.form.file
-    // this.$refs.psi_file.reset()
-    },
+    
     async addOffline(obj){
       if(!obj) return
+
+      if(this.to_add_psi){
+        this.to_add_psi = []
+      }
      
       if(this.form.file && this.form.file.name){
-        obj.file = await this.toBase64(this.form.file);
+        // obj.file = await this.toBase64(this.form.file);
+        obj.file = this.form.file.nativeURL
         obj.file_name = this.form.file.name
       }
+
       obj.add_id = new Date().getTime()
       this.to_add_psi.push(obj)
       LocalStorage.set('to_add_psi', this.to_add_psi)
+      this.resetForm()
       this.$q.notify({
         timeout: 2000,
         color: 'green',
@@ -559,22 +633,18 @@ export default {
         icon: 'check_circle'
       })
     },
+
     async submitPSI(){
       try{
         if(this.loading) return
         this.loading = true
         const obj = {
-          post_id: this.selected_well.ID,
-          user_id: this.user.user_id,
+          ...this.form,
           idate: this.current_date,
-          reading_a: this.form.reading_a,
-          reading_b: this.form.reading_b,
-          reading_c: this.form.reading_c,
-          comment: this.form.comment,
-          file: this.form.file,
         }
-      
+          console.log(obj, 'obj')
           await this.$store.dispatch('user/submitPSI',obj)
+            console.log(obj, 'obj 1')
           this.$store.dispatch('user/dashboardLoad')
           this.$q.notify({
             timeout: 2000,
@@ -599,19 +669,20 @@ export default {
           this.loading = false
           this.resetForm()
       }catch(error){
-        console.log(error)
-        const obj = {
-          post_id: this.selected_well.ID,
-          user_id: this.user.user_id,
+        
+        try {
+          
+          const obj = {
+          ...this.form,
           idate: this.current_date,
-          reading_a: this.form.reading_a,
-          reading_b: this.form.reading_b,
-          reading_c: this.form.reading_c,
-          comment: this.form.comment,
-          file: this.form.file,
         }
+           console.log(obj, 'addOffline 1' ,  this.to_add_psi)
         this.addOffline(obj)
+            console.log(obj, 'addOffline 2' ,  this.to_add_psi)
         this.loading = false
+        }  catch (error){
+          console.log(error, 'error 2')
+        }
       }
     }
   }

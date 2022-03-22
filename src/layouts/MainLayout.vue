@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf" container class="main-container">
-    <q-header class="header" bordered v-if="$route.meta.auth" style="border-color:#efefef">
+    <q-header :class="$q.platform.is.ios ? 'header-ios' : 'header'" bordered v-if="$route.meta.auth" style="border-color:#efefef">
       <q-toolbar class="bg-white">
         <q-toolbar-title>
           <img
@@ -114,11 +114,12 @@ export default {
     return {
       leftDrawerOpen: false,
       essentialLinks: linksData,
-      userOnline:true
     }
   },
   computed:{
     ...mapState('user', ['is_online']),
+  },
+  watch:{
   },
   created(){
     /*
@@ -149,13 +150,22 @@ export default {
     }
     if(user && webAppUrl){
       this.$store.commit('user/setUser',user)
-      this.$router.push('/dashboard')
     }
-  }
+  },
 }
 </script>
+<style lang="scss">
+.header-ios{
+  padding-top: constant(safe-area-inset-top); // for iOS 11.0
+  padding-top: env(safe-area-inset-top); // for iOS 11.2 +
+}
 
-<style scoped>
+.footer-ios{
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+</style>
+<style scoped lang="scss">
 .main-container{
   height: 100vh;
   max-width: 400px;

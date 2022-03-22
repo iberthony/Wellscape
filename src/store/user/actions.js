@@ -71,11 +71,16 @@ export const submitPSI = async(context, payload) => {
     for(const key in payload){
       formData.append(key, payload[key])
     }
+    console.log(context.state.is_online, 'context.state.is_online')
+    if(!context.state.is_online){
+      reject()
+    }
     axios.post(context.state.webAppUrl+'addpsireading',formData)
     .then((response) => {
-      console.log(response.data)
+      console.log(response.data, 'data')
       resolve(response)
     }).catch(error =>{
+      console.log('error 5', error)
       reject(error)
     });
   });
