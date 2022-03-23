@@ -466,6 +466,7 @@ export default {
       immediate: true,
       handler(val){
         if(!val) return
+       this.to_add_psi = LocalStorage.getItem('to_add_psi') || []
         if(this.to_add_psi.length){
           this.submitToAddPsi(this.to_add_psi[0])
         }
@@ -500,6 +501,22 @@ export default {
     this.resetForm()
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
+    const onOnline = () => {
+      console.log( 'onOnline')
+       this.$store.commit('user/setOnline',true)
+    }
+    const onOffline = () => {
+        console.log( 'onOffline')
+       this.$store.commit('user/setOnline',false)
+    }
+     const onDeviceReady  = ()  => {
+         console.log( 'onOffonDeviceReadyline')
+	    document.addEventListener("offline", onOffline, false);
+      document.addEventListener("online", onOnline, false);
+    }
+    
+    document.addEventListener("deviceready", onDeviceReady, false);
+ 
   },
   methods:{
     async openCamera(){
@@ -530,6 +547,7 @@ export default {
       console.log(this.form.file)
       this.createFileUrl(val)
       .then((response) => {
+       console.log(response, 'response')
         this.form.file = response
       })
     },
@@ -537,7 +555,6 @@ export default {
     cameraError(val){
       console.log(val)
     },
-
     async submitToAddPsi(reading){
       try{
         const obj = {
@@ -550,7 +567,9 @@ export default {
           comment: reading.comment,
         }
         // obj.file = reading.file //  ? await this.parseFile(reading.file, 'File') : null
+        if(reading.file){
         obj.file = await this.createFileUrl(reading.file)
+        }
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
         if(index >= 0){
@@ -607,6 +626,10 @@ export default {
     
     async addOffline(obj){
       if(!obj) return
+
+      if(this.to_add_psi){
+        this.to_add_psi = []
+      }
      
       if(this.form.file && this.form.file.name){
         // obj.file = await this.toBase64(this.form.file);
@@ -638,6 +661,7 @@ export default {
           this.addOffline(obj)
         }else{
           await this.$store.dispatch('user/submitPSI',obj)
+            console.log(obj, 'obj 1')
           this.$store.dispatch('user/dashboardLoad')
           this.$q.notify({
             timeout: 2000,
@@ -645,27 +669,15 @@ export default {
             message: 'PSI reading uploaded',
             icon: 'check_circle'
           })
-        }
-        
-        // const obj2 = {
-          //   post_id: this.selected_well.ID,
-          //   author_name: 'System',
-          //   dated: this.current_date,
-          //   reading_a: this.form.reading_a,
-          //   reading_b: this.form.reading_b,
-          //   reading_c: this.form.reading_c,
-          //   comment: this.form.comment,
-          //   file_name: '',
-          //   timestamp: response.data.dated,
-          //   download_href: '',
-          // }
           this.loading = false
           this.resetForm()
+        }
       }catch(error){
         const obj = {
           ...this.form,
           idate: this.current_date,
         }
+        console.log(obj, 'addOffline 1' ,  this.to_add_psi)
         this.addOffline(obj)
         this.loading = false
       }
