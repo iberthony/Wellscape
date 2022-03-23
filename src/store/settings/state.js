@@ -6,7 +6,7 @@ export default function () {
       allowEdit: false,
       mediaType: 0,
       saveToPhotoAlbum: true,
-      destinationType: 1,
+      destinationType: 0,
       cameraDirection: 0,
     }
   }

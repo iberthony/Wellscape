@@ -421,6 +421,7 @@
 <script>
 import { mapState } from 'vuex'
 import { LocalStorage } from 'quasar'
+import { debounce } from 'quasar'
 export default {
   name: 'Dashboard',
   data(){
@@ -470,6 +471,14 @@ export default {
         }
       }
     },
+    to_add_psi:{
+      immediate: true,
+      handler(val){
+        if(val.length){
+          this.submitToAddPsi(val[0])
+        }
+      }
+    },
     selected_well:{
       deep: true,
       handler(val){
@@ -481,12 +490,14 @@ export default {
     const pressure_readings = LocalStorage.getItem('pressure_readings')
     const activities = LocalStorage.getItem('activities')
     const wells = LocalStorage.getItem('wells')
+    const to_add_psi = LocalStorage.getItem('to_add_psi')
     if(pressure_readings) this.$store.commit('user/setPressureReadings',pressure_readings)
     if(activities) this.$store.commit('user/setActivities',activities)
     if(wells) this.$store.commit('user/setWells',wells)
-    this.resetForm()
+    if(to_add_psi) this.to_add_psi = to_add_psi
   },
   mounted(){
+    this.resetForm()
     this.$store.dispatch('user/loadWells')
     this.$store.dispatch('user/dashboardLoad')
   },
@@ -497,22 +508,28 @@ export default {
 
     createFileUrl(val){
       return new Promise((resolve, reject) => {
-        window.resolveLocalFileSystemURL(val, function success(fileEntry) {
-          resolve(fileEntry)
-          navigator.camera.cleanup()
-        }, function () {
-          // If don't get the FileEntry (which may happen when testing
-          // on some emulators), copy to a new FileEntry.
-          createNewFileEntry(imgUri);
-        });
+        const url = "data:image/jpeg;base64,"+val
+        const file = new File([url],{ type: 'image/png' })
+        file.name = new Date().getTime()+'.png'
+        resolve(file)
+        // window.resolveLocalFileSystemURL(val, function success(fileEntry) {
+        //   resolve(fileEntry)
+        //   navigator.camera.cleanup()
+        // }, function () {
+        //   createNewFileEntry(imgUri);
+        // });
       })
       
     },
 
     cameraSuccess(val){
+      const url = "data:image/jpeg;base64,"+val
+      const file = new File([url],{ type: 'image/png' })
+      file.name = new Date().getTime()+'.png'
+      this.form.file = file
+      console.log(this.form.file)
       this.createFileUrl(val)
       .then((response) => {
-        console.log(response.nativeURL)
         this.form.file = response
       })
     },
@@ -540,10 +557,11 @@ export default {
           this.to_add_psi.splice(index,1)
           LocalStorage.set('to_add_psi', this.to_add_psi)
         }
-        if(this.to_add_psi.length){
-          this.submitToAddPsi(this.to_add_psi[0])
-        }else{
+        if(!this.to_add_psi.length){
+          // this.submitToAddPsi(this.to_add_psi[0])
           this.$store.dispatch('user/dashboardLoad')
+        }else{
+          // this.$store.dispatch('user/dashboardLoad')
         }
       }catch(error){
         if(this.to_add_psi.length){
@@ -616,7 +634,7 @@ export default {
           ...this.form,
           idate: this.current_date,
         }
-        if(this.is_online){
+        if(!this.is_online){
           this.addOffline(obj)
         }else{
           await this.$store.dispatch('user/submitPSI',obj)
