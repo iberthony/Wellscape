@@ -3,6 +3,7 @@
     <div class="col-12 row">
       <div class="col-6 q-px-xs">
         <q-btn
+          @click="openCamera()"
           padding="15px 0"
           flat
           class="full-width"
@@ -366,7 +367,7 @@
                     dense>
                     <template v-slot:control>
                       <div class="self-center full-width no-outline" tabindex="0" @click="openCamera()">
-                        {{form.file ? form.file.name : 'Choose file'}}
+                        {{form.file ? 'form.file.name' : 'Choose file'}}
                       </div>
                     </template>
                     <template v-slot:append>
@@ -519,6 +520,12 @@ export default {
  
   },
   methods:{
+    testFiles(files){
+      console.log('Uploader :')
+      console.log(files[0])
+      this.form.file = files[0]
+    },
+
     async openCamera(){
       navigator.camera.getPicture(this.cameraSuccess, this.cameraError,this.cameraOptions)
     },
@@ -529,32 +536,93 @@ export default {
         const file = new File([url],{ type: 'image/png' })
         file.name = new Date().getTime()+'.png'
         resolve(file)
-        // window.resolveLocalFileSystemURL(val, function success(fileEntry) {
-        //   resolve(fileEntry)
-        //   navigator.camera.cleanup()
-        // }, function () {
-        //   createNewFileEntry(imgUri);
-        // });
       })
       
     },
+    
+    dataURLtoFile(dataurl, filename) {
+      var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while(n--){
+      u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, {type:mime});
+    },
+
+    parseFile(dataURI,file_name='file') {
+      var byteString = atob(dataURI.split(',')[1]);
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+      }
+        return new Blob([ab], { type: 'image/png' });
+    },
+
+    toBase64(file){
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+      })
+    },
 
     cameraSuccess(val){
-      const url = "data:image/jpeg;base64,"+val
-      const file = new File([url],{ type: 'image/png' })
-      file.name = new Date().getTime()+'.png'
-      this.form.file = file
-      console.log(this.form.file)
-      this.createFileUrl(val)
-      .then((response) => {
-       console.log(response, 'response')
-        this.form.file = response
-      })
+      const vm = this
+      console.log(Camera)
+      console.log(val)
+      window.resolveLocalFileSystemURL(val, 
+        function(fileEntry){
+            fileEntry.file(function (file) {
+              let reader = new FileReader();
+              reader.onload = function() {
+                function b64toBlob(b64Data, contentType, sliceSize) {
+                  contentType = contentType || '';
+                  sliceSize = sliceSize || 512;
+
+                  var byteCharacters = atob(b64Data);
+                  var byteArrays = [];
+
+                  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                      var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+                      var byteNumbers = new Array(slice.length);
+                      for (var i = 0; i < slice.length; i++) {
+                          byteNumbers[i] = slice.charCodeAt(i);
+                      }
+
+                      var byteArray = new Uint8Array(byteNumbers);
+
+                      byteArrays.push(byteArray);
+                  }
+
+                var blob = new Blob(byteArrays, {type: contentType,lastModified:new Date().getTime()});
+                return blob;
+                }
+                // var ImageURL = reader.result
+                // var block = ImageURL.split(";");
+                // var contentType = block[0].split(":")[1];
+                // var realData = block[1].split(",")[1];
+                // var blob = b64toBlob(realData, contentType);
+                var blob = vm.parseFile(reader.result)
+                console.log(blob)
+                blob.dataURL = reader.result
+                vm.form.file = blob
+              };
+              reader.readAsDataURL(file)
+              // vm.form.file = file
+            });
+            // fileEntry.file() should return a raw HTML File Object
+        },
+        function(){}
+      );
     },
 
     cameraError(val){
       console.log(val)
     },
+    
     async submitToAddPsi(reading){
       try{
         const obj = {
@@ -566,9 +634,8 @@ export default {
           reading_c: reading.reading_c,
           comment: reading.comment,
         }
-        // obj.file = reading.file //  ? await this.parseFile(reading.file, 'File') : null
         if(reading.file){
-        obj.file = await this.createFileUrl(reading.file)
+          obj.file = await this.createFileUrl(reading.file)
         }
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
@@ -587,25 +654,6 @@ export default {
         //  this.submitToAddPsi(this.to_add_psi[0])
         }
       }
-    },
-
-    parseFile(dataURI) {
-      var byopenCameraring = atob(dataURI.split(',')[1]);
-      var ab = new ArrayBuffer(byteString.length);
-      var ia = new Uint8Array(ab);
-      for (var i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i);
-      }
-        return new Blob([ab], { type: 'image/png' });
-    },
-
-    toBase64(file){
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-      })
     },
     
     resetForm(){
@@ -661,7 +709,7 @@ export default {
           this.addOffline(obj)
         }else{
           await this.$store.dispatch('user/submitPSI',obj)
-            console.log(obj, 'obj 1')
+          console.log(obj, 'obj 1')
           this.$store.dispatch('user/dashboardLoad')
           this.$q.notify({
             timeout: 2000,

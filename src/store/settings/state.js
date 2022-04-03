@@ -6,8 +6,9 @@ export default function () {
       allowEdit: false,
       mediaType: 0,
       saveToPhotoAlbum: true,
-      destinationType: 0,
+      destinationType: 1,
       cameraDirection: 0,
+      encodingType: 1,
     }
   }
 }

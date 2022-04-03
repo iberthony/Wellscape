@@ -69,13 +69,21 @@ export const submitPSI = async(context, payload) => {
     if(!context.state.webAppUrl) return
     const formData = new FormData()
     for(const key in payload){
-      formData.append(key, payload[key])
+      if(key == 'file'){
+        formData.append(key, payload[key],'file.png')
+      }else{
+        formData.append(key, payload[key])
+      }
     }
     console.log(context.state.is_online, 'context.state.is_online')
     if(!context.state.is_online){
       reject()
     }
-    axios.post(context.state.webAppUrl+'addpsireading',formData)
+    axios.post(context.state.webAppUrl+'addpsireading',formData,{
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    })
     .then((response) => {
       console.log(response.data, 'data')
       resolve(response)
