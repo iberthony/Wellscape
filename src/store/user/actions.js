@@ -70,7 +70,7 @@ export const submitPSI = async(context, payload) => {
     const formData = new FormData()
     for(const key in payload){
       if(key == 'file'){
-        formData.append(key, payload[key],'file.png')
+        formData.append(key, payload[key],payload[key].name)
       }else{
         formData.append(key, payload[key])
       }

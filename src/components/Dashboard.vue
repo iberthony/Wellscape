@@ -3,7 +3,6 @@
     <div class="col-12 row">
       <div class="col-6 q-px-xs">
         <q-btn
-          @click="openCamera()"
           padding="15px 0"
           flat
           class="full-width"
@@ -273,7 +272,7 @@
               <q-item
                 clickable
                 v-ripple
-                v-for="(item,index) in wells.filter(x => x.post_title.includes(search_well))"
+                v-for="(item,index) in wells.filter(x => x.post_title.toLowerCase().includes(search_well.toLowerCase()))"
                 :key="'well-'+index"
                 @click="selected_well = item;search_well = ''">
                 <q-item-section>
@@ -311,7 +310,10 @@
                 
                 @submit="submitPSI()">
                 <div class="col-12" >
-                  <q-input outlined type="date" v-model="form.idate"/>
+                  <q-input
+                    outlined
+                    type="date"
+                    v-model="form.idate" />
                 </div>
                 <div class="col-12 row q-gutter-x-xs">
                   <div class="col">
@@ -367,7 +369,7 @@
                     dense>
                     <template v-slot:control>
                       <div class="self-center full-width no-outline" tabindex="0" @click="openCamera()">
-                        {{form.file ? 'form.file.name' : 'Choose file'}}
+                        {{form.file ? form.file.name : 'Choose file'}}
                       </div>
                     </template>
                     <template v-slot:append>
@@ -467,10 +469,7 @@ export default {
       immediate: true,
       handler(val){
         if(!val) return
-       this.to_add_psi = LocalStorage.getItem('to_add_psi') || []
-        if(this.to_add_psi.length){
-          this.submitToAddPsi(this.to_add_psi[0])
-        }
+        this.to_add_psi = LocalStorage.getItem('to_add_psi') || []
       }
     },
     to_add_psi:{
@@ -486,7 +485,7 @@ export default {
       handler(val){
         if(val) {this.form.post_id = val.ID;this.form.user_id = this.user.user_id}
       }
-    }
+    },
   },
   created(){
     const pressure_readings = LocalStorage.getItem('pressure_readings')
@@ -520,33 +519,8 @@ export default {
  
   },
   methods:{
-    testFiles(files){
-      console.log('Uploader :')
-      console.log(files[0])
-      this.form.file = files[0]
-    },
-
     async openCamera(){
       navigator.camera.getPicture(this.cameraSuccess, this.cameraError,this.cameraOptions)
-    },
-
-    createFileUrl(val){
-      return new Promise((resolve, reject) => {
-        const url = "data:image/jpeg;base64,"+val
-        const file = new File([url],{ type: 'image/png' })
-        file.name = new Date().getTime()+'.png'
-        resolve(file)
-      })
-      
-    },
-    
-    dataURLtoFile(dataurl, filename) {
-      var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-      bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-      while(n--){
-      u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new File([u8arr], filename, {type:mime});
     },
 
     parseFile(dataURI,file_name='file') {
@@ -559,15 +533,6 @@ export default {
         return new Blob([ab], { type: 'image/png' });
     },
 
-    toBase64(file){
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = error => reject(error);
-      })
-    },
-
     cameraSuccess(val){
       const vm = this
       console.log(Camera)
@@ -577,43 +542,13 @@ export default {
             fileEntry.file(function (file) {
               let reader = new FileReader();
               reader.onload = function() {
-                function b64toBlob(b64Data, contentType, sliceSize) {
-                  contentType = contentType || '';
-                  sliceSize = sliceSize || 512;
-
-                  var byteCharacters = atob(b64Data);
-                  var byteArrays = [];
-
-                  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-                      var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-                      var byteNumbers = new Array(slice.length);
-                      for (var i = 0; i < slice.length; i++) {
-                          byteNumbers[i] = slice.charCodeAt(i);
-                      }
-
-                      var byteArray = new Uint8Array(byteNumbers);
-
-                      byteArrays.push(byteArray);
-                  }
-
-                var blob = new Blob(byteArrays, {type: contentType,lastModified:new Date().getTime()});
-                return blob;
-                }
-                // var ImageURL = reader.result
-                // var block = ImageURL.split(";");
-                // var contentType = block[0].split(":")[1];
-                // var realData = block[1].split(",")[1];
-                // var blob = b64toBlob(realData, contentType);
                 var blob = vm.parseFile(reader.result)
-                console.log(blob)
                 blob.dataURL = reader.result
+                blob.name = file.name
                 vm.form.file = blob
               };
               reader.readAsDataURL(file)
-              // vm.form.file = file
             });
-            // fileEntry.file() should return a raw HTML File Object
         },
         function(){}
       );
@@ -622,9 +557,10 @@ export default {
     cameraError(val){
       console.log(val)
     },
-    
+
     async submitToAddPsi(reading){
       try{
+        if(!this.is_online) return
         const obj = {
           post_id: reading.post_id,
           user_id: reading.user_id,
@@ -635,23 +571,26 @@ export default {
           comment: reading.comment,
         }
         if(reading.file){
-          obj.file = await this.createFileUrl(reading.file)
+          obj.file = this.parseFile(reading.file)
+          obj.file.dataUrl = reading.file
+          obj.file.name = reading.file_name
         }
         await this.$store.dispatch('user/submitPSI',obj)
         const index = this.to_add_psi.findIndex(x => x.add_id == reading.add_id)
         if(index >= 0){
           this.to_add_psi.splice(index,1)
           LocalStorage.set('to_add_psi', this.to_add_psi)
+          this.$store.dispatch('user/dashboardLoad')
         }
         if(!this.to_add_psi.length){
           // this.submitToAddPsi(this.to_add_psi[0])
-          this.$store.dispatch('user/dashboardLoad')
+          // this.$store.dispatch('user/dashboardLoad')
         }else{
           // this.$store.dispatch('user/dashboardLoad')
         }
       }catch(error){
         if(this.to_add_psi.length){
-        //  this.submitToAddPsi(this.to_add_psi[0])
+         this.submitToAddPsi(this.to_add_psi[0])
         }
       }
     },
@@ -669,7 +608,7 @@ export default {
       }
       this.selected_well = null
       const idate = new Date()
-      this.form.idate = idate.getFullYear()+'-'+(idate.getMonth() < 10 ? '0'+(idate.getMonth()+1) : (idate.getMonth()+1) )+'-'+idate.getDate()
+      this.form.idate = idate.getFullYear()+'-'+(idate.getMonth() < 10 ? '0'+(idate.getMonth()+1) : (idate.getMonth()+1) )+'-'+(idate.getDate() > 9 ? idate.getDate() : ('0'+idate.getDate()))
     },
     
     async addOffline(obj){
@@ -681,7 +620,7 @@ export default {
      
       if(this.form.file && this.form.file.name){
         // obj.file = await this.toBase64(this.form.file);
-        obj.file = this.form.file.nativeURL
+        obj.file = this.form.file.dataURL
         obj.file_name = this.form.file.name
       }
 
