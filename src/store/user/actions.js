@@ -69,19 +69,23 @@ export const submitPSI = async(context, payload) => {
     if(!context.state.webAppUrl) return
     const formData = new FormData()
     for(const key in payload){
-      if(key == 'file'){
-        formData.append(key, payload[key],payload[key].name)
+      console.log(key, 'key')
+      if(key == 'file' && payload[key].dataURL){
+        formData.append(key, payload[key].dataURL)
       }else{
         formData.append(key, payload[key])
       }
     }
-    console.log(context.state.is_online, 'context.state.is_online')
+    if(payload.file && payload.file.dataURL){
+    payload.file =  payload.file.dataURL
+    }
+    //console.log(payload, 'payload[key].dataURL')
     if(!context.state.is_online){
       reject()
     }
-    axios.post(context.state.webAppUrl+'addpsireading',formData,{
+    axios.post(context.state.webAppUrl+'addpsireading',payload,{
       headers: {
-        'Content-Type': 'multipart/form-data',
+       // 'Content-Type': 'multipart/form-data',
       }
     })
     .then((response) => {

@@ -3,8 +3,11 @@ export default function () {
     cameraOptions: {
       quality: 50,
       sourceType: 1,
-      allowEdit: false,
+      targetWidth: 500,
+      targetHeight: 500,
+      allowEdit: true,
       mediaType: 0,
+      correctOrientation:true,
       saveToPhotoAlbum: true,
       destinationType: 1,
       cameraDirection: 0,

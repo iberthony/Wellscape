@@ -230,6 +230,7 @@
 
     <q-dialog
       maximized
+      :key="selected_well ? selected_well.post_title: ''"
       transition-show="slide-left"
       transition-hide="slide-right"
       v-model="add_psi">
@@ -369,13 +370,13 @@
                     dense>
                     <template v-slot:control>
                       <div class="self-center full-width no-outline" tabindex="0" @click="openCamera()">
-                        {{form.file ? form.file.name : 'Choose file'}}
+                        {{form.file ? form.file.name : 'Take a picture'}}
                       </div>
                     </template>
                     <template v-slot:append>
                       <div class="q-gutter-x-sm">
                         <q-icon
-                          name="fa fa-folder-open"
+                          name="fa fa-camera"
                           @click="openCamera()" />
                         <q-icon
                           v-if="form.file && false"
@@ -395,9 +396,9 @@
                     outlined
                     bottom-slots
                     accept="image/*"
-                    label="Choose file">
+                    label="Take a picture">
                     <template v-slot:append>
-                      <q-icon name="fa fa-folder-open"/>
+                      <q-icon name="fa fa-camera"/>
                     </template>
                   </q-file>
                 </div>
@@ -412,6 +413,10 @@
                     text-color="white"
                     style="border-radius:10px;background:#7ab929" />
                 </div>
+                <div v-show="false"> 
+                <div id="original"></div>
+<div id="resampled"></div>
+</div>
               </q-form>
             </q-item-section>
           </q-item>
@@ -461,7 +466,7 @@ export default {
       if(this.form.idate){
         idate = new Date(this.form.idate)
       }
-      return idate.getDate()+' '+this.months[idate.getMonth()+1]+' '+idate.getFullYear()
+      return idate.getDate()+' '+this.months[idate.getMonth()]+' '+idate.getFullYear()
     }
   },
   watch:{
@@ -572,7 +577,7 @@ export default {
         }
         if(reading.file){
           obj.file = this.parseFile(reading.file)
-          obj.file.dataUrl = reading.file
+          obj.file.dataURL = reading.file
           obj.file.name = reading.file_name
         }
         await this.$store.dispatch('user/submitPSI',obj)
@@ -620,12 +625,31 @@ export default {
      
       if(this.form.file && this.form.file.name){
         // obj.file = await this.toBase64(this.form.file);
-        obj.file = this.form.file.dataURL
-        obj.file_name = this.form.file.name
-      }
 
-      obj.add_id = new Date().getTime()
+var canvas = document.createElement("canvas");
+var ctx = canvas.getContext("2d");
+
+canvas.width = 500; // target width
+canvas.height = 500; // target height
+
+var image = new Image();
+
+document.getElementById("original").appendChild(image);
+
+image.onload = (e) => {
+    ctx.drawImage(image, 
+        0, 0, image.width, image.height, 
+        0, 0, canvas.width, canvas.height
+    );
+    // create a new base64 encoding
+    var resampledImage = new Image();
+    resampledImage.src = canvas.toDataURL();
+     obj.file = resampledImage.src
+    document.getElementById("resampled").appendChild(resampledImage);
+
+     obj.add_id = new Date().getTime()
       this.to_add_psi.push(obj)
+        this.loading = false
       LocalStorage.set('to_add_psi', this.to_add_psi)
       this.resetForm()
       this.$q.notify({
@@ -634,6 +658,26 @@ export default {
         message: 'PSI reading will be uploaded when you get back online',
         icon: 'check_circle'
       })
+};
+     obj.file_name = this.form.file.name
+image.src = this.form.file.dataURL
+
+      //  obj.file = this.form.file.dataURL
+   
+      }  else {
+
+      obj.add_id = new Date().getTime()
+      this.to_add_psi.push(obj)
+      LocalStorage.set('to_add_psi', this.to_add_psi)
+      this.resetForm()
+        this.loading = false
+      this.$q.notify({
+        timeout: 2000,
+        color: 'green',
+        message: 'PSI reading will be uploaded when you get back online',
+        icon: 'check_circle'
+      })
+      }
     },
 
     async submitPSI(){
