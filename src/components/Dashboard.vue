@@ -9,7 +9,9 @@
           label="Well Activity"
           icon="add"
           text-color="white"
-          style="border-radius:10px;background:#7ab929" />
+          style="border-radius:10px;background:#7ab929"
+          @click="add_well_activity = true"
+        />
       </div>
       <div class="col-6 q-px-xs">
         <q-btn
@@ -308,7 +310,7 @@
               <q-form
                 ref="add_well"
                 class="row q-gutter-y-md"
-                
+
                 @submit="submitPSI()">
                 <div class="col-12" >
                   <q-input
@@ -326,7 +328,7 @@
                       step="0.01"
                       placeholder="Reading A"
                       :rules="[val => !!val && val > 0 || 'Invalid reading']"
-                      lazy-rules 
+                      lazy-rules
                       hide-bottom-space/>
                   </div>
                   <div class="col">
@@ -338,7 +340,7 @@
                       step="0.01"
                       placeholder="Reading B"
                       :rules="[val => !!val && val > 0 || 'Invalid reading']"
-                      lazy-rules 
+                      lazy-rules
                       hide-bottom-space/>
                   </div>
                   <div class="col">
@@ -350,7 +352,7 @@
                       step="0.01"
                       placeholder="Reading C"
                       :rules="[val => !!val && val > 0 || 'Invalid reading']"
-                      lazy-rules 
+                      lazy-rules
                       hide-bottom-space/>
                   </div>
                 </div>
@@ -413,7 +415,7 @@
                     text-color="white"
                     style="border-radius:10px;background:#7ab929" />
                 </div>
-                <div v-show="false"> 
+                <div v-show="false">
                 <div id="original"></div>
 <div id="resampled"></div>
 </div>
@@ -423,12 +425,14 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <AddWellActivity :add_well_activity="add_well_activity" @close="add_well_activity = false"/>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 import { LocalStorage } from 'quasar'
+import AddWellActivity from "components/AddWellActivity";
 import { debounce } from 'quasar'
 export default {
   name: 'Dashboard',
@@ -436,6 +440,7 @@ export default {
     return{
       addedFile:null,
       add_psi: false,
+      add_well_activity: false,
       search_well: '',
       selected_well: null,
       loading: false,
@@ -468,6 +473,9 @@ export default {
       }
       return idate.getDate()+' '+this.months[idate.getMonth()]+' '+idate.getFullYear()
     }
+  },
+  components: {
+    AddWellActivity
   },
   watch:{
     is_online:{
@@ -519,9 +527,9 @@ export default {
 	    document.addEventListener("offline", onOffline, false);
       document.addEventListener("online", onOnline, false);
     }
-    
+
     document.addEventListener("deviceready", onDeviceReady, false);
- 
+
   },
   methods:{
     async openCamera(){
@@ -542,7 +550,7 @@ export default {
       const vm = this
       console.log(Camera)
       console.log(val)
-      window.resolveLocalFileSystemURL(val, 
+      window.resolveLocalFileSystemURL(val,
         function(fileEntry){
             fileEntry.file(function (file) {
               let reader = new FileReader();
@@ -599,7 +607,7 @@ export default {
         }
       }
     },
-    
+
     resetForm(){
       this.form = {
         post_id: null,
@@ -615,14 +623,14 @@ export default {
       const idate = new Date()
       this.form.idate = idate.getFullYear()+'-'+(idate.getMonth() < 10 ? '0'+(idate.getMonth()+1) : (idate.getMonth()+1) )+'-'+(idate.getDate() > 9 ? idate.getDate() : ('0'+idate.getDate()))
     },
-    
+
     async addOffline(obj){
       if(!obj) return
 
       if(this.to_add_psi){
         this.to_add_psi = []
       }
-     
+
       if(this.form.file && this.form.file.name){
         // obj.file = await this.toBase64(this.form.file);
 
@@ -637,8 +645,8 @@ var image = new Image();
 document.getElementById("original").appendChild(image);
 
 image.onload = (e) => {
-    ctx.drawImage(image, 
-        0, 0, image.width, image.height, 
+    ctx.drawImage(image,
+        0, 0, image.width, image.height,
         0, 0, canvas.width, canvas.height
     );
     // create a new base64 encoding
@@ -663,7 +671,7 @@ image.onload = (e) => {
 image.src = this.form.file.dataURL
 
       //  obj.file = this.form.file.dataURL
-   
+
       }  else {
 
       obj.add_id = new Date().getTime()
