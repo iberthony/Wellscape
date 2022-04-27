@@ -175,7 +175,7 @@
                     stack-label
                     dense>
                     <template v-slot:control>
-                      <div class="self-center full-width no-outline" tabindex="0" @click="$emit('openCamera')">
+                      <div class="self-center full-width no-outline" tabindex="0" @click="openCamera('signaturePhoto')">
                         Take a Picture
                       </div>
                     </template>
@@ -183,7 +183,7 @@
                       <div class="q-gutter-x-sm">
                         <q-icon
                           name="fa fa-camera"
-                          @click="$emit('openCamera')" />
+                          @click="openCamera('signaturePhoto')" />
                         <!--                      <q-icon-->
                         <!--                        v-if="form.file && false"-->
                         <!--                        name="cancel"-->
@@ -217,7 +217,7 @@
                 <q-card-section class="q-pa-sm">
                   <div class="row justify-between items-center">
                     <span class="text-weight-bold text-subtitle1">Select Well *</span>
-                    <q-btn @click="wellsList = true" class="text-capitalize text-weight-bold" flat color="grey-9" :label="selected_well ? selected_well.post_title : 'Select Well'"></q-btn>
+                    <q-btn @click="wellsList = true" icon-right="keyboard_arrow_down" class="text-capitalize text-weight-bold" flat color="grey-9" :label="selected_well ? selected_well.post_title : 'Select Well'"></q-btn>
                   </div>
                 </q-card-section>
                 <q-card-section class="q-px-none bg-white q-mb-md">
@@ -226,7 +226,7 @@
                 <q-card-section class="q-pa-none">
                   <p class="text-weight-medium text-subtitle1">Verify by Scanning QR Code</p>
                   <div style="height: 80px" class="bg-white row justify-center q-py-md">
-                    <q-btn label="Scan Barcode" class="text-capitalize" color="negative" />
+                    <q-btn @click="openCamera('barcode')" label="Scan Barcode" class="text-capitalize" color="negative" />
                   </div>
                 </q-card-section>
                 <q-card-section class="q-px-none">
@@ -241,9 +241,9 @@
                 </q-card-section>
                 <q-card-section class="q-px-none bg-white">
                   <div style="height: 80px" class="flex justify-center">
-                    <p class="text-light-blue-9 text-weight-bold q-mb-none">272438S 15330E</p>
+                    <p class="text-light-blue-9 text-weight-bold q-mb-none">{{ gpsPoint }}</p>
                     <br>
-                    <p class="text-light-blue-9 text-weight-bold">Altitude: 14.7144m, Accuracy: 4.5906m </p>
+                    <p class="text-light-blue-9 text-weight-bold">Altitude: {{ gpsAltitude }}, Accuracy: {{ gpsAccurancy }} </p>
                   </div>
                   <q-separator class="bg-blue-10 q-mb-lg" />
                 </q-card-section>
@@ -251,13 +251,22 @@
                   <q-input
                     outlined
                     type="date"
-                    v-model="inspectionDate" />
+                    style="text-align: end;"
+                    v-model="inspectionDate">
+                    <template v-slot:prepend>
+                      <span class="text-subtitle1">Date</span>
+                    </template>
+                  </q-input>
                 </q-card-section>
                 <q-card-section class="q-pa-none">
                   <q-input
                     outlined
                     type="time"
-                    v-model="inspectionTime" />
+                    v-model="inspectionTime">
+                    <template v-slot:prepend>
+                      <span class="text-subtitle1">Time</span>
+                    </template>
+                  </q-input>
                 </q-card-section>
                 <q-card-section class="q-px-none bg-white">
                   <q-separator class="bg-blue-10 q-mb-lg" />
@@ -424,7 +433,7 @@
                     stack-label
                     dense>
                     <template v-slot:control>
-                      <div class="self-center full-width no-outline" tabindex="0" @click="$emit('openCamera')">
+                      <div class="self-center full-width no-outline" tabindex="0" @click="openCamera('wellheadPhoto')">
                         Take a Picture
                       </div>
                     </template>
@@ -432,7 +441,7 @@
                       <div class="q-gutter-x-sm">
                         <q-icon
                           name="fa fa-camera"
-                          @click="$emit('openCamera')" />
+                          @click="openCamera('wellheadPhoto')" />
                         <!--                      <q-icon-->
                         <!--                        v-if="form.file && false"-->
                         <!--                        name="cancel"-->
@@ -521,6 +530,10 @@ export default {
         {label: 'No', value: 'no'},
         {label: 'N/A', value: 'na'}
       ],
+      whereToSavePhoto: '',
+      signaturePhoto: null,
+      wellheadPhoto: null,
+      barcode: null,
       wellHead: {
         wellStatus: 'online',
         gaugePresent: 'yes'
@@ -547,11 +560,67 @@ export default {
         cleanAndTidy: 'na',
         cleanAndTidyOptionalComment: '',
         cellarAcceptableCondition: 'na'
-      }
+      },
+      gpsPoint: '',
+      gpsAltitude: '',
+      gpsAccurancy: ''
     }
   },
   computed: {
-    ...mapState('user', ['user','wells'])
+    ...mapState('user', ['user','wells']),
+    ...mapState('settings', ['cameraOptions'])
+  },
+  mounted() {
+    document.addEventListener("deviceready", this.getLocationGPS, false);
+  },
+  methods: {
+    getLocationGPS() {
+      navigator.geolocation.getCurrentPosition(this.onSuccessGPS, this.onGPSError);
+    },
+    onSuccessGPS(position) {
+      this.gpsPoint = position.coords.latitude + ' ' + position.coords.longitude
+      this.gpsAltitude = position.coords.altitude
+      this.gpsAccurancy = position.coords.accuracy
+    },
+    onGPSError(val) {
+      console.log('error on GPS: ', val)
+    },
+    async openCamera(whereToSave){
+      this.whereToSavePhoto = whereToSave
+      navigator.camera.getPicture(this.cameraSuccess, this.cameraError,this.cameraOptions)
+    },
+    cameraSuccess(val){
+      const vm = this
+      console.log(Camera)
+      console.log(val)
+      window.resolveLocalFileSystemURL(val,
+        function(fileEntry){
+          fileEntry.file(function (file) {
+            let reader = new FileReader();
+            reader.onload = function() {
+              var blob = vm.parseFile(reader.result)
+              blob.dataURL = reader.result
+              blob.name = file.name
+              vm[this.whereToSavePhoto] = blob
+            };
+            reader.readAsDataURL(file)
+          });
+        },
+        function(){}
+      );
+    },
+    parseFile(dataURI,file_name='file') {
+      var byteString = atob(dataURI.split(',')[1]);
+      var ab = new ArrayBuffer(byteString.length);
+      var ia = new Uint8Array(ab);
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      return new Blob([ab], { type: 'image/png' });
+    },
+    cameraError(val){
+      console.log(val)
+    },
   },
   props: ['add_well_activity']
 }
@@ -573,6 +642,16 @@ export default {
     text-transform: capitalize;
     font-weight: bold;
     border-radius: 8px;
+  }
+}
+.q-icon {
+  &.on-right {
+    margin-left: 2px;
+  }
+}
+input {
+  &.q-field__native {
+    text-align: end !important;
   }
 }
 </style>

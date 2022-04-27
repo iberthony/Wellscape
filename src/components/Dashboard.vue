@@ -425,7 +425,7 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-    <AddWellActivity :add_well_activity="add_well_activity" @close="add_well_activity = false" @openCamera="openCamera"/>
+    <AddWellActivity :add_well_activity="add_well_activity" @close="add_well_activity = false"/>
   </div>
 </template>
 
