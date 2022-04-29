@@ -247,6 +247,12 @@
                       <span class="text-subtitle1 text-weight-medium">Cellar</span>
                       <q-btn color="negative" class="text-capitalize" label="Clear"></q-btn>
                     </div>
+                    <div class="row justify-center q-my-md">
+                      <q-img
+                        :src="signaturePhoto"
+                        style="width: 100%; height: auto;"
+                      />
+                    </div>
                   </q-card-section>
                   <q-card-section class="bg-white">
                     <q-field
@@ -429,6 +435,12 @@
                   <q-card-section class="bg-transparent text-black">
                     <div class="row justify-end items-center">
                       <q-btn color="negative" class="text-capitalize" label="Clear"></q-btn>
+                    </div>
+                    <div class="row justify-center q-my-md">
+                      <q-img
+                        :src="wellheadPhoto"
+                        style="width: 100%; height: auto;"
+                      />
                     </div>
                   </q-card-section>
                   <q-card-section class="bg-white">
@@ -623,12 +635,15 @@ export default {
               var blob = vm.parseFile(reader.result)
               blob.dataURL = reader.result
               blob.name = file.name
-              vm[this.whereToSavePhoto] = blob
+              // vm.barcode = blob.dataURL
+              vm[vm.whereToSavePhoto] = blob.dataURL
             };
             reader.readAsDataURL(file)
           });
         },
-        function(){}
+        function(val){
+          vm.barcode = 'ERROR: ' + val
+        }
       );
     },
     parseFile(dataURI,file_name='file') {
@@ -673,8 +688,14 @@ export default {
 }
 input {
   &.q-field__native {
+    background-color: $grey-3;
+    text-align: end;
     display: flex;
+    flex-direction: row;
     justify-content: flex-end;
+    &:last-child {
+      margin-left: auto;
+    }
   }
 }
 </style>
