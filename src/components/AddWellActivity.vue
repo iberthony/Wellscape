@@ -5,10 +5,12 @@
       maximized
       transition-show="slide-left"
       transition-hide="slide-right"
+      style="max-height: 100vh"
       :value="add_well_activity"
+      class="column"
     >
       <q-card>
-        <q-card-section class="row items-center q-py-sm q-px-xs bg-white">
+        <q-card-section class="row items-center q-py-sm q-px-xs bg-white" style="height: 48px;">
           <div class="text-h6 full-width relative-position">
             <q-btn
               color="blue-6"
@@ -17,7 +19,7 @@
               flat
               round
               dense
-              @click="$emit('close');">
+              @click="backHeader">
               <span
                 class="relative-position text-subtitle1 text-blue-6">
                 Back
@@ -31,14 +33,14 @@
         </q-card-section>
 
         <q-card-section class="q-px-xs bg-grey-3 q-pb-none q-pt-none">
-          <q-scroll-area ref="scrollArea" style="height: calc(100vh - 48px); width: 100%;">
+          <q-scroll-area ref="scrollArea" style="height: calc(100vh - 60px); width: 100%;">
             <q-stepper
             v-model="step"
             ref="stepper"
             animated
             flat
             header-class="hide-el"
-            class="bg-transparent"
+            class="bg-transparent q-pb-lg"
           >
               <q-step
                 :name="1"
@@ -80,6 +82,7 @@
                         color="negative"
                         label="Clear"
                         no-caps
+                        @click="gpsPoint = ''; gpsAltitude = ''; gpsAccurancy = '';"
                       />
                     </div>
                   </q-card-section>
@@ -177,9 +180,9 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-px-lg">
+                    <div class="row q-pr-sm">
                       <div class="col-12">
-                        <q-input v-model="leaseOptions.signageInTactOptionalComment" borderless label="Optional comment" />
+                        <q-input class="text-right" v-model="leaseOptions.signageInTactOptionalComment" borderless label="Optional comment" />
                       </div>
                     </div>
                   </q-card-section>
@@ -204,7 +207,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="row q-px-lg">
+                    <div class="row q-pr-sm">
                       <div class="col-12">
                         <q-input v-model="leaseOptions.cleanAndTidyOptionalComment" borderless label="Optional comment" />
                       </div>
@@ -245,7 +248,7 @@
                   <q-card-section class="bg-transparent text-black">
                     <div class="row justify-between items-center">
                       <span class="text-subtitle1 text-weight-medium">Cellar</span>
-                      <q-btn color="negative" class="text-capitalize" label="Clear"></q-btn>
+                      <q-btn color="negative" class="text-capitalize" label="Clear" @click="signaturePhoto = null;"></q-btn>
                     </div>
                     <div class="row justify-center q-my-md">
                       <q-img
@@ -434,7 +437,7 @@
                   </q-card-section>
                   <q-card-section class="bg-transparent text-black">
                     <div class="row justify-end items-center">
-                      <q-btn color="negative" class="text-capitalize" label="Clear"></q-btn>
+                      <q-btn color="negative" class="text-capitalize" label="Clear" @click="wellheadPhoto = null;"></q-btn>
                     </div>
                     <div class="row justify-center q-my-md">
                       <q-img
@@ -471,7 +474,7 @@
               </q-step>
 
             <template v-slot:navigation>
-              <q-stepper-navigation class="bg-white">
+              <q-stepper-navigation class="bg-white q-pb-xl">
                 <div class="row justify-center q-pt-md">
                   <q-btn v-if="step > 1" no-caps dense color="positive" @click="back" label="Back" />
                   <q-btn @click="next" no-caps dense color="positive" class="q-ml-sm" :label="step === 3 ? 'Submit' : 'Next'" />
@@ -608,6 +611,14 @@ export default {
       this.$refs.stepper.previous()
       this.$refs.scrollArea.setScrollPosition('vertical', 0)
     },
+    backHeader() {
+      if (this.step === 1) {
+        this.$emit('close')
+      } else {
+        this.$refs.stepper.previous()
+        this.$refs.scrollArea.setScrollPosition('vertical', 0)
+      }
+    },
     getLocationGPS() {
       navigator.geolocation.getCurrentPosition(this.onSuccessGPS, this.onGPSError);
     },
@@ -686,7 +697,7 @@ export default {
     margin-left: 2px;
   }
 }
-input {
+input[type='date'], input[type='time'] {
   &.q-field__native {
     background-color: $grey-3;
     text-align: end;
