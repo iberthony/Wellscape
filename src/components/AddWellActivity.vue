@@ -31,7 +31,7 @@
         </q-card-section>
 
         <q-card-section class="q-px-xs bg-grey-3 q-pb-none q-pt-none">
-          <q-scroll-area ref="scrollArea" style="height: calc(100vh - 48px); width: 100%;">
+
             <q-stepper
             v-model="step"
             ref="stepper"
@@ -467,7 +467,7 @@
               </q-stepper-navigation>
             </template>
           </q-stepper>
-          </q-scroll-area>
+     
         </q-card-section>
       </q-card>
     </q-dialog>
