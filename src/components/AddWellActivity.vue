@@ -9,39 +9,43 @@
       :value="add_well_activity"
       class="column"
     >
-      <q-card>
-        <q-card-section class="row items-center q-py-sm q-px-xs bg-white" style="height: 48px;">
-          <div class="text-h6 full-width relative-position">
-            <q-btn
-              color="blue-6"
-              size="sm"
-              icon="arrow_back_ios_new"
-              flat
-              round
-              dense
-              @click="backHeader">
+      <q-layout view="hHh lpR fFf" ref="cpage" class="scroll">
+        <q-header class="bg-white">
+          <q-toolbar class="flex">
+            <div style="flex: 1">
+              <q-btn
+                color="blue-6"
+                size="sm"
+                icon="arrow_back_ios_new"
+                flat
+                round
+                dense
+                style="flex: 1;"
+                @click="backHeader">
               <span
                 class="relative-position text-subtitle1 text-blue-6">
                 Back
               </span>
-            </q-btn>
-            <span
-              class="absolute-center text-body1 text-bold">
+              </q-btn>
+            </div>
+            <div>
+               <span class="vertical-middle text-body1 text-bold text-black">
               New Well Activty
             </span>
-          </div>
-        </q-card-section>
-
-        <q-card-section class="q-px-xs bg-grey-3 q-pb-none q-pt-none">
-          <q-scroll-area ref="scrollArea" style="height: calc(100vh - 60px); width: 100%;">
+            </div>
+            <div style="flex: 1;"></div>
+          </q-toolbar>
+        </q-header>
+        <q-page-container class="bg-white">
+          <q-page class="q-px-xs bg-grey-3 q-pb-none q-pt-none">
             <q-stepper
-            v-model="step"
-            ref="stepper"
-            animated
-            flat
-            header-class="hide-el"
-            class="bg-transparent q-pb-lg"
-          >
+              v-model="step"
+              ref="stepper"
+              animated
+              flat
+              header-class="hide-el"
+              class="bg-transparent q-pb-lg"
+            >
               <q-step
                 :name="1"
                 title="Lease Area"
@@ -473,18 +477,18 @@
                 </q-card>
               </q-step>
 
-            <template v-slot:navigation>
-              <q-stepper-navigation class="bg-white q-pb-xl">
-                <div class="row justify-center q-pt-md">
-                  <q-btn v-if="step > 1" no-caps dense color="positive" @click="back" label="Back" />
-                  <q-btn @click="next" no-caps dense color="positive" class="q-ml-sm" :label="step === 3 ? 'Submit' : 'Next'" />
-                </div>
-              </q-stepper-navigation>
-            </template>
-          </q-stepper>
-          </q-scroll-area>
-        </q-card-section>
-      </q-card>
+              <template v-slot:navigation>
+                <q-stepper-navigation class="bg-white q-pb-xl">
+                  <div class="row justify-center q-pt-md">
+                    <q-btn v-if="step > 1" no-caps dense color="positive" @click="back" label="Back" />
+                    <q-btn @click="next" no-caps dense color="positive" class="q-ml-sm" :label="step === 3 ? 'Submit' : 'Next'" />
+                  </div>
+                </q-stepper-navigation>
+              </template>
+            </q-stepper>
+          </q-page>
+        </q-page-container>
+      </q-layout>
     </q-dialog>
     <q-dialog
       maximized
@@ -536,7 +540,7 @@
 <script>
 import {mapState} from "vuex";
 import { scroll } from 'quasar'
-const { setScrollPosition, getScrollTarget } = scroll
+const { getScrollTarget, setVerticalScrollPosition, setScrollPosition } = scroll
 
 export default {
   name: "AddWellActivity",
@@ -603,20 +607,26 @@ export default {
         this.getLocationGPS()
       }
     },
+    scrollTop() {
+      const element = this.$refs.cpage.$el
+      const target = getScrollTarget(element)
+      let offset = element.offsetTop
+      setVerticalScrollPosition(target, offset, 10)
+    },
     next() {
       this.$refs.stepper.next()
-      this.$refs.scrollArea.setScrollPosition('vertical', 0)
+      this.scrollTop()
     },
     back() {
       this.$refs.stepper.previous()
-      this.$refs.scrollArea.setScrollPosition('vertical', 0)
+      this.scrollTop()
     },
     backHeader() {
       if (this.step === 1) {
         this.$emit('close')
       } else {
         this.$refs.stepper.previous()
-        this.$refs.scrollArea.setScrollPosition('vertical', 0)
+        this.scrollTop()
       }
     },
     getLocationGPS() {
