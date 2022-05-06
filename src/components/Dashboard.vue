@@ -6,7 +6,7 @@
           padding="15px 0"
           flat
           class="full-width"
-          label="Well Activity"
+          label="Inspection"
           icon="add"
           text-color="white"
           style="border-radius:10px;background:#7ab929"
@@ -19,7 +19,7 @@
           padding="15px 0"
           flat
           class="full-width"
-          label="PSI Reading"
+          label="Pressure Read"
           icon="add"
           text-color="white"
           style="border-radius:10px;background:#7ab929" />
@@ -30,7 +30,7 @@
         <q-expansion-item
           switch-toggle-side
           expand-separator
-          label="Pressure Readings"
+          label="Historical Pressure Readings"
           header-class="text-uppercase text-bold expansion-header q-px-sm"
         >
           <q-separator />

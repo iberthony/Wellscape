@@ -683,7 +683,7 @@ export default {
   props: ['add_well_activity']
 }
 </script>
-<style lang="scss" scope>
+<style lang="scss" scoped>
 .hide-el {
   display: none !important;
 }
