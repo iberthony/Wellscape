@@ -254,7 +254,7 @@
             </q-btn>
             <span
               class="absolute-center text-body1 q-pt-xs text-bold">
-              New PSI Reading
+              Pressure read
             </span>
           </div>
         </q-card-section>

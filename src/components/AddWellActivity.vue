@@ -33,7 +33,8 @@
         </q-card-section>
 
         <q-card-section class="q-px-xs bg-grey-3 q-pb-none q-pt-none">
- <q-stepper
+          <q-scroll-area ref="scrollArea" style="height: calc(100vh - 60px); width: 100%;">
+            <q-stepper
             v-model="step"
             ref="stepper"
             animated
@@ -481,7 +482,7 @@
               </q-stepper-navigation>
             </template>
           </q-stepper>
-     
+          </q-scroll-area>
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -672,7 +673,7 @@ export default {
   props: ['add_well_activity']
 }
 </script>
-<style lang="scss">
+<style lang="scss" scope>
 .hide-el {
   display: none !important;
 }
