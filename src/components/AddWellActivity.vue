@@ -7,7 +7,7 @@
       transition-hide="slide-right"
       :value="add_well_activity"
     >
-      <q-card>
+      <q-card class="add-well-activity">
         <q-card-section class="row items-center q-py-sm q-px-xs bg-white">
           <div class="text-h6 full-width relative-position">
             <q-btn
@@ -663,38 +663,40 @@ export default {
 }
 </script>
 <style lang="scss">
-.hide-el {
-  display: none !important;
-}
-.bg-green-brand {
-  background-color: #7ab929;
-}
-.q-stepper__step-inner {
-  padding: 4px 4px 0px !important;
-}
-.style-toggle {
-  border-radius: 0px;
-  button {
-    margin-right: 12px !important;
-    text-transform: capitalize;
-    font-weight: bold;
-    border-radius: 8px;
+.add-well-activity {
+  .hide-el {
+    display: none !important;
   }
-}
-.q-icon {
-  &.on-right {
-    margin-left: 2px;
+  .bg-green-brand {
+    background-color: #7ab929;
   }
-}
-input {
-  &.q-field__native {
-    background-color: $grey-3;
-    text-align: end;
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    &:last-child {
-      margin-left: auto;
+  .q-stepper__step-inner {
+    padding: 4px 4px 0px !important;
+  }
+  .style-toggle {
+    border-radius: 0px;
+    button {
+      margin-right: 12px !important;
+      text-transform: capitalize;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+  }
+  .q-icon {
+    &.on-right {
+      margin-left: 2px;
+    }
+  }
+  input {
+    &.q-field__native {
+      background-color: $grey-3;
+      text-align: end;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      &:last-child {
+        margin-left: auto;
+      }
     }
   }
 }
