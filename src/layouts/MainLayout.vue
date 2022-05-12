@@ -5,8 +5,9 @@
         <q-toolbar-title>
           <img
             alt="Quasar logo"
+            class="q-pt-sm"
             src="~assets/logo.png"
-            style="height: 25px"
+            style="width:150px"
           >
         </q-toolbar-title>
         <q-badge
