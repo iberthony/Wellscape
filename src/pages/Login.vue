@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center login-page">
-    <q-card flat class="full-width">
+    <q-card @click="apple" flat class="full-width">
       <q-card-section class="q-py-none row justify-center">
         <img
           alt="Quasar logo"
@@ -56,7 +56,7 @@
           />
           <q-input
             ref="password"
-            :type="isPwd ? 'password' : 'text'" 
+            :type="isPwd ? 'password' : 'text'"
             outlined
             autocomplete="current-password"
             v-model="form.password"
@@ -75,7 +75,7 @@
           <p class="q-mt-none" :style="$style.errorMessage" v-if="error1">{{error1}}</p>
           <div class="row justify-around q-gutter-x-sm">
             <div class="col">
-              <q-btn 
+              <q-btn
                 :disable="is_loading2"
                 size="md"
                 padding="md"
@@ -87,7 +87,7 @@
               />
             </div>
             <div class="col">
-              <q-btn 
+              <q-btn
                 :disable="form.username.length == 0 || form.password.length == 0"
                 :loading="is_loading"
                 size="md"
@@ -100,7 +100,7 @@
               />
             </div>
           </div>
-          
+
         </q-form>
         <q-form
           v-show="step == 1"
@@ -127,7 +127,7 @@
             lazy-rules
           />
           <p class="q-mt-none text-red text-capitalize" v-if="error2">{{error2}}</p>
-          <q-btn 
+          <q-btn
             :disable="form2.company.length == 0 || form2.companyCode.length == 0"
             :loading="is_loading2"
             size="md"
@@ -141,8 +141,8 @@
         </q-form>
       </q-card-section>
     </q-card>
-    
-    
+
+
   </q-page>
 </template>
 
@@ -173,7 +173,7 @@ export default {
     ...mapState('user', ['user','webAppUrl']),
   },
   created(){
-    
+
   },
   mounted(){
     const webAppUrl = LocalStorage.getItem('webAppUrl')
@@ -196,9 +196,22 @@ export default {
     }
   },
   mounted(){
-    
+
   },
   methods:{
+    apple(){
+      window.cordova.plugins.SignInWithApple.signin(
+  { requestedScopes: [0, 1] },
+  function(succ){
+    console.log(succ)
+    alert(JSON.stringify(succ))
+  },
+  function(err){
+    console.error(err)
+    console.log(JSON.stringify(err))
+  }
+)
+    },
     login(form){
       if(this.is_loading) return
       this.is_loading = true
@@ -243,7 +256,7 @@ export default {
   .q-field__control {
     border-radius: 15px !important;
   }
-  
+
   .q-stepper__tab{
     padding: 0;
   }
